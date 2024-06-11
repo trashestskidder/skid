@@ -2786,6 +2786,172 @@ task.spawn(function()
 	end
 end)
 
+local EliteHunter = Farm:AddSection({"Elite Hunter"})
+
+local EliteStatus = Info:AddParagraph({"Elite Hunter"})
+task.spawn(function()
+	while task.wait() do
+		pcall(function()
+		   	if game:GetService("ReplicatedStorage"):FindFirstChild("Diablo") or game:GetService("ReplicatedStorage"):FindFirstChild("Deandre") or game:GetService("ReplicatedStorage"):FindFirstChild("Urban") or game:GetService("Workspace").Enemies:FindFirstChild("Diablo") or game:GetService("Workspace").Enemies:FindFirstChild("Deandre") or game:GetService("Workspace").Enemies:FindFirstChild("Urban") then
+				EliteStatus:Set("Status : 🟢") 
+			else
+				EliteStatus:Set("Status : 🔴")
+			end
+		end)
+	end
+end)
+
+local EliteProgress = Info:AddParagraph({"Elite Hunter Progress"})
+spawn(function()
+	pcall(function()
+		while task.wait() do
+			EliteProgress:Set("Status : " .. game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("EliteHunter", "Progress"))
+		end
+	end)
+end)
+
+local AutoEliteHunterToggle = Farm:AddToggle({
+	Name = "Auto Elite Hunter",
+	Description = "Tự động đánh boss bí ẩn",
+	Default = _G.Settings.AutoEliteHunter
+})
+AutoEliteHunterToggle:Callback(function(value)
+	_G.AutoEliteHunter = value
+	Elite()
+	_G.Settings.AutoEliteHunter = value
+	SaveSettings()
+	if value == false then
+        toTarget(game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame)
+    end
+end)
+
+local AutoEliteHunterHopToggle = Farm:AddToggle({
+	Name = "Auto Elite Hunter + Hop",
+	Description = "Tự động đánh boss bí ẩn + đổi sever",
+	Default = _G.Settings.AutoEliteHunterHop
+})
+AutoEliteHunterHopToggle:Callback(function(value)
+	_G.AutoEliteHunterHop = value
+	Elite()
+	_G.Settings.AutoEliteHunterHop = value
+	SaveSettings()
+	if value == false then
+        toTarget(game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame)
+    end
+end)
+
+function Elite()
+	task.spawn(function()
+		while task.wait() do
+			pcall(function()
+				if _G.AutoEliteHunter then
+					if game.Players.LocalPlayer.PlayerGui.Main.Quest.Visible == true then
+						if string.find(game.Players.LocalPlayer.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text, "Diablo") or string.find(game.Players.LocalPlayer.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text, "Urban") or string.find(game.Players.LocalPlayer.PlayerGui.Main.Quest.Container.QuestTitle.Title.Text, "Deandre") then
+							for i, v in pairs(game.ReplicatedStorage:GetChildren()) do
+								if string.find(v.Name, "Diablo") then
+									EliteHunter = toTarget(v.HumanoidRootPart.CFrame)
+									if (v.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude <= 150 then
+										if EliteHunter then
+											EliteHunter:Stop()
+										end
+										game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v
+                                            .HumanoidRootPart.CFrame
+									end
+								end
+								if string.find(v.Name, "Urban") then
+									EliteHunter = toTarget(v.HumanoidRootPart.CFrame)
+									if (v.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude <= 150 then
+										if EliteHunter then
+											EliteHunter:Stop()
+										end
+										game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v
+                                            .HumanoidRootPart.CFrame
+									end
+								end
+								if string.find(v.Name, "Deandre") then
+									EliteHunter = toTarget(v.HumanoidRootPart.CFrame)
+									if (v.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude <= 150 then
+										if EliteHunter then
+											EliteHunter:Stop()
+										end
+										game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v
+                                            .HumanoidRootPart.CFrame
+									end
+								end
+							end
+							for i, v in pairs(game.Workspace.Enemies:GetChildren()) do
+								if _G.AutoEliteHunter and string.find(v.Name, "Diablo") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+									repeat
+										task.wait()
+										if (v.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude > 150 then
+											Farmtween = toTarget(v.HumanoidRootPart.CFrame)
+										elseif (v.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude <= 150 then
+											if Farmtween then
+												Farmtween:Stop()
+											end
+											game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v .HumanoidRootPart.CFrame * MethodFarm
+											FastAttack = true
+											EquipWeapon(_G.SelectWeapon)
+										end
+									until not _G.AutoEliteHunter or not v.Parent or v.Humanoid.Health <= 0
+									FastAttack = false
+								end
+								if _G.AutoEliteHunter and string.find(v.Name, "Urban") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+									repeat
+										task.wait()
+										if (v.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude > 150 then
+											Farmtween = toTarget(v.HumanoidRootPart.CFrame)
+										elseif (v.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude <= 150 then
+											if Farmtween then
+												Farmtween:Stop()
+											end
+											game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v .HumanoidRootPart.CFrame * MethodFarm
+											FastAttack = true
+											EquipWeapon(_G.SelectWeapon)
+										end
+									until not _G.AutoEliteHunter or not v.Parent or v.Humanoid.Health <= 0
+									FastAttack = false
+								end
+								if _G.AutoEliteHunter and string.find(v.Name, "Deandre") and v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+									repeat
+										task.wait()
+										if (v.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude > 150 then
+											Farmtween = toTarget(v.HumanoidRootPart.CFrame)
+										elseif (v.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude <= 150 then
+											if Farmtween then
+												Farmtween:Stop()
+											end
+											game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v .HumanoidRootPart.CFrame * MethodFarm
+											FastAttack = true
+											EquipWeapon(_G.SelectWeapon)
+										end
+									until not _G.AutoEliteHunter or not v.Parent or v.Humanoid.Health <= 0
+									FastAttack = false
+								end
+							end
+						else
+							local string_1 = "EliteHunter";
+							local Target = game:GetService("ReplicatedStorage").Remotes["CommF_"];
+							Target:InvokeServer(string_1);
+						end
+					else
+						local string_1 = "EliteHunter";
+						local Target = game:GetService("ReplicatedStorage").Remotes["CommF_"];
+						Target:InvokeServer(string_1);
+					end
+				end
+			end)
+		end
+	end)
+	if _G.AutoEliteHunterHop then
+		if not (game.Workspace.Enemies:FindFirstChild("Deandre") or game.Workspace.Enemies:FindFirstChild("Urban") or game.Workspace.Enemies:FindFirstChild("Diablo") or game.ReplicatedStorage:FindFirstChild("Deandre") or game.ReplicatedStorage:FindFirstChild("Urban") or game.ReplicatedStorage:FindFirstChild("Diablo")) then
+			wait(10)
+			Teleport()
+			Hop()
+		end
+	end
+end
+
 local AutoCDK = Farm:AddSection({"Cursed Dual Katana"})
 
 local AutoHolyTorchToggle = Farm:AddToggle({
