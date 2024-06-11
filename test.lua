@@ -99,89 +99,66 @@ end
 
 --Save Setting
 _G.Settings = {
-    AutoFarm = false,
-    DoubleQuest = false,
-    NeareastFarm = false,
-    Mirage = false ,
-    MirageHop = false,
-    Auto_Gear = false,
-    TeleportGear = false,
-    AutoNewWorld = false,
-    TweenToFruitSpawn = false,
-    AutoSaber = false,
-    AutoPole = false,
-    TeleportIsland = false,
-    AutoThirdSea = false,
-    AutoBartiloQuest = false,
-    Auto_Evo_Race_V2 = false,
-    AutoDarkCoat = false,
-    AutoSwanGlasses = false,
-    AutoTrueTriplKatana = false,
-    AutoRengoku = false,
-    AutoEctoplasm = false,
-    AutoFactory = false,
-    AutoRainbowHaki = false,
-    AutoBuyEnchanmentHakiHop = false,
-    AutoBuyLegendarySwordHop = false,
-    AutoEliteHunter = false,
-    AutoMusketeerHat = false,
-    AutoBuddySword = false,
-    AutoFarmBone = false,
-    SpawnBossHallow = false,
-    AutoKenHakiV2 = false,
-    AutoObservation = false,
-    AutoObservation_Hop = false,
-    AutoGodHuman = false,
-    AutoCavander = false,
-    AutoCursedDualKatana = false,
-    AutoYamaSword = false,
-    AutoTushitaSword = false,
-    AutoSerpentBow = false,
-    AutoDarkDagger = false,
-    AutoCakePrince = false,
-    AutoDoughV2 = false,
-    AutoHolyTorch = false,
-    AutoBuddySwords = false,
-    AutoFarmBossHallow = false,
-    MobAura = false,
-    YamaQuest2 = false,
-    YamaQuest1 = false,
-    Auto_Cursed_Dual_Katana = false,
-    Tushita_Quest2 = false,
-    Tushita_Quest1 = false,
-    TeleporttoSeaBeast = false,
-    AutoEvent = false,
-    TPTOBOAT = false,
-    AutoFarmMaterial = false,
-    Teleporttop = false,
-    AutoFarmChest = false,
-    AutoAllBoss = false,
-    AutoBossSelect = false,
-    AutoFarmBoss = false,
-    AutoFarmFruitMastery = false,
-    AutoFarmGunMastery = false,
-    FarmMasterySwordList = false,
-    AutoRaids = false,
-    AutoNextPlace = false,
+	--Main Tab
+	SelectWeapon = "Melee",
+	FastType = "Normal",
+	Method = "Upper",
+	AutoFarm = false,
+	NeareastFarm = false,
+	AutoFarmBone = false,
+	AutoRandomBone = false,
+	TryLuck = false,
+	Pray = false,
+	AutoCakePrince = false,
+	AutoFarmChest = false,
 	ChestBypassBypass = false,
+	SelectModeMaterial = "",
+	AutoFarmMaterial = false,
+	--Setting Tab
+	SafeMode = false,
+	DistanceAutoFarm = 30,
+	--Farm Tab
+	AutoCastleRaid = false,
+	AutoSoulGuitar = false,
+	AutoKenHakiV2 = false,
+	AutoRainbowHaki = false,
+	AutoSwanGlasses = false,
+	AutoTrueTriplKatana = false,
+	AutoFactory = false,
+	AutoEctoplasm = false,
+	AutoDarkCoat = false,
+	AutoBartiloQuest = false,
+	AutoEliteHunter = false,
+	AutoEliteHunterHop = false,
+	AutoHolyTorch = false,
+	Auto_Cursed_Dual_Katana = false,
+	TushitaQuest1 = false,
+	TushitaQuest2 = false,
+	YamaQuest1 = false,
+	YamaQuest2 = false,
+	MobAura = false,
 	AutoNewWorld = false,
+	AutoThirdSea = false,
 	AutoSaber = false,
 	AutoPole = false,
-	AutoBuyAbility = false,
-	AutoThirdSea = false,
-	AutoEvoRace = false,
-	AutoDarkCoat = false,
-	AutoEctoplasm = false,
-	AutoFactory = false,
-	AutoTrueTriplKatana = false,
 	AutoRengoku = false,
-	AutoSwanGlasses = false,
-    AutoRainbowHaki = false,
-    AutoKenHakiV2 = false,
-    Auto_Cursed_Dual_Katana = false,
-    AutoHolyTorch = false,
-	TushitaQuest1 = false,
-	TushitaQuest2 = false
+	--Stats Tab
+
+	--Teleport Tab
+
+	--Player Tab
+
+	--Fruit Tab
+
+	--Raid Tab
+
+	--Shop Tab
+	AutoBuyAbility = false,
+	--Misc Tab
+
+	--Race Tab
+	AutoEvoRace = false
+	--Event Tab
 }
 
 function LoadSettings()
@@ -1412,7 +1389,59 @@ end)
 ----------------------------------------------------------------------------------------------------------------------Main Tab
 local ConfigFarm = Main:AddSection({"Config Farm"})
 
-local FastAttackSpeedDropdown = Tab2:AddDropdown({
+local SelectWeaponDropdown = Main:AddDropdown({
+	Name = "Select Weapon",
+	Description = "Chọn vũ khí",
+	Options = {"Melee", "Sword", "Fruit"},
+	Default = _G.Settings.SelectWeapon,
+	Flag = "...",
+	Callback = function(value)
+		SelectWeapon = value
+		_G.Settings.SelectWeapon = value
+		SaveSettings()
+	end
+})
+task.spawn(function()
+	while wait() do
+		pcall(function()
+			if SelectWeapon == "Melee" then
+				for i, v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+					if v.ToolTip == "Melee" then
+						if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v.Name)) then
+							_G.SelectWeapon = v.Name
+						end
+					end
+				end
+			elseif SelectWeapon == "Sword" then
+				for i, v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+					if v.ToolTip == "Sword" then
+						if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v.Name)) then
+							_G.SelectWeapon = v.Name
+						end
+					end
+				end
+			elseif SelectWeapon == "Fruit" then
+				for i, v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+					if v.ToolTip == "Blox Fruit" then
+						if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v.Name)) then
+							_G.SelectWeapon = v.Name
+						end
+					end
+				end
+			else
+				for i ,v in pairs(game.Players.LocalPlayer.Backpack:GetChildren()) do
+					if v.ToolTip == "Melee" then
+						if game.Players.LocalPlayer.Backpack:FindFirstChild(tostring(v.Name)) then
+							_G.SelectWeapon = v.Name
+						end
+					end
+				end
+			end
+		end)
+	end
+end)
+
+local FastAttackSpeedDropdown = Main:AddDropdown({
 	Name = "Fast Attack Speed",
 	Description = "Tốc độ đánh nhanh",
 	Options = {"Slow", "Normal", "Fast", "Ultra"},
@@ -1467,6 +1496,34 @@ task.spawn(function()
                 end
             end
         end)
+    end
+end)
+
+local MethodFarmDropdown = Main:AddDropdown({
+	Name = "Method Farm",
+	Description = "Cách cày",
+	Options = {"Upper", "Behind", "Below"},
+	Default = _G.Settings.Method,
+	Flag = "...",
+	Callback = function(value)
+		_G.Method = value
+		_G.Settings.Method = value
+		SaveSettings()
+	end
+})
+task.spawn(function()
+    while task.wait(0) do
+		pcall(function()
+			if _G.Method == "Behind" then
+				MethodFarm = CFrame.new(0, 0,  _G.DistanceAutoFarm)
+			elseif _G.Method == "Below" then
+				MethodFarm = CFrame.new(0, - _G.DistanceAutoFarm, 0) * CFrame.Angles(math.rad(90), 0, 0)
+			elseif _G.Method == "Upper" then
+				MethodFarm = CFrame.new(0,  _G.DistanceAutoFarm, 0) * CFrame.Angles(math.rad(0), 0, 0)
+			else
+				MethodFarm = CFrame.new(0,  _G.DistanceAutoFarm, 0)
+			end
+		end)
     end
 end)
 
@@ -1899,7 +1956,7 @@ end)
 local AutoRandomBoneToggle = Main:AddToggle({
 	Name = "Auto Random Bone",
 	Description = "Tự động random xương",
-	Default = _G.Settings.AutoFarmBone
+	Default = _G.Settings.AutoRandomBone
 })
 AutoRandomBoneToggle:Callback(function(value)
 	_G.AutoRandomBone = value
@@ -2323,6 +2380,19 @@ spawn(function()
 		end
 	end
 end)
+
+Main:AddSlider({
+	Name = "Distance Farm",
+	Min = 1,
+	Max = 50,
+	Increase = 1,
+	Default = _G.Settings.DistanceAutoFarm,
+	Callback = function(value)
+		_G.DistanceAutoFarm = value
+		_G.Settings.DistanceAutoFarm = value
+		SaveSettings()
+	end
+})
 ----------------------------------------------------------------------------------------------------------------------Farm Tab
 local AutoCastleRaidToggle = Farm:AddToggle({
 	Name = "Auto Castle Raid",
