@@ -1,3 +1,4 @@
+--a
 local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/REDzHUB/RedzLibV5/main/Source.Lua"))()
 
 local Window = redzlib:MakeWindow({
@@ -25,30 +26,30 @@ local q = Instance.new("TextButton")
 local r = Instance.new("UICorner")
 local s = Instance.new("ImageLabel")
 r.Name = "sex"
-r.Parent = q;
+r.Parent = q
 s.Name = "sexgay"
-s.Parent = q;
+s.Parent = q
 s.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
-s.BackgroundTransparency = 1.000;
-s.BorderSizePixel = 0;
+s.BackgroundTransparency = 1.000
+s.BorderSizePixel = 0
 s.Position = UDim2.new(0.234619886, 0, 0.239034846, 0)
 s.Size = UDim2.new(0, 30, 0, 30)
 s.Image = "rbxassetid://15689000757"
 p.Name = "nung"
-p.Parent = game.CoreGui;
-p.ZIndexBehavior = Enum.ZIndexBehavior.Sibling;
+p.Parent = game.CoreGui
+p.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
 q.Name = "gay"
 q.Parent = p;
 q.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-q.BackgroundTransparency = 0.1;
-q.BorderSizePixel = 0;
+q.BackgroundTransparency = 0.1
+q.BorderSizePixel = 0
 q.Position = UDim2.new(0.120833337, 0, 0.0952890813, 0)
 q.Size = UDim2.new(0, 55, 0, 55)
-q.Font = Enum.Font.SourceSans;
+q.Font = Enum.Font.SourceSans
 q.Text = ""
 q.TextColor3 = Color3.fromRGB(153, 51, 255)
-q.TextSize = 30.000;
-q.Draggable = true;
+q.TextSize = 20.000
+q.Draggable = true
 q.MouseButton1Click:Connect(function()
 	Window:Minimize()
 end)
@@ -2015,6 +2016,21 @@ spawn(function()
 	end
 end)
 
+local AutoSpawnCakePrinceToggle = Main:AddToggle({
+	Name = "Auto Spawn Cake Prince",
+	Description = "Tự động triệu hồi tư lệnh bột",
+	Default = true
+})
+AutoSpawnCakePrinceToggle:Callback(function(value)
+	_G.Spawnka = value
+end)
+spawn(function()
+	while _G.Spawnka do 
+		wait()
+		game.ReplicatedStorage.Remotes.CommF_:InvokeServer("CakePrinceSpawner")
+	end
+end)
+
 local ChestFarm = Main:AddSection({"Chest Farm"})
 
 local AutoFarmChestToggle = Main:AddToggle({
@@ -2096,6 +2112,129 @@ spawn(function()
             game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(ohString1, ohString2)
         end
     end
+end)
+
+local MaterialFarm = Main:AddSection({"Material Farm"})
+
+local SelectMaterialDropdown = Main:AddDropdown({
+	Name = "Select Material",
+	Description = "Chọn nguyên liệu",
+	Options = AllMaterial,
+	Default = _G.Settings.SelectModeMaterial,
+	Flag = "...",
+	Callback = function(value)
+	    SelectModeMaterial = value
+		_G.Settings.SelectModeMaterial = value
+		SaveSettings()
+	end
+})
+
+local AutoFarmSelectedMaterialToggle = Main:AddToggle({
+	Name = "Auto Farm Selected Material",
+	Description = "Tự động cày nguyên liệu đã chọn",
+	Default = _G.Settings.AutoFarmMaterial
+})
+AutoFarmSelectedMaterialToggle:Callback(function(value)
+	AutoFarmMaterial = value
+	_G.Settings.AutoFarmMaterial = value
+	SaveSettings()
+	if value == false then
+		toTarget(game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame)
+	end
+end)
+task.spawn(function()
+	while task.wait() do
+		if AutoFarmMaterial then
+			xpcall(function()
+				if (SelectModeMaterial ~= "") then
+					CheckMaterial(SelectModeMaterial);
+					if CustomFindFirstChild(MaterialMob) then
+						for v0, v1 in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+							if (AutoFarmMaterial and table.find(MaterialMob, v1.Name) and v1:FindFirstChild("HumanoidRootPart") and v1:FindFirstChild("Humanoid") and (v1.Humanoid.Health > 0)) then
+								repeat
+									task.wait();
+									FarmtoTarget = toTarget(v1.HumanoidRootPart.CFrame * CFrame.new(0, 30, 1));
+									if (v1:FindFirstChild("HumanoidRootPart") and v1:FindFirstChild("Humanoid") and ((v1.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude <= 150)) then
+										if FarmtoTarget then FarmtoTarget:Stop(); end
+										FastAttack = true;
+										EquipWeapon(_G.SelectWeapon);
+										spawn(function()
+											for v4, v5 in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+												if (v5.Name == v1.Name) then
+													spawn(function()
+														if InMyNetWork(v5.HumanoidRootPart) then
+															v5.HumanoidRootPart.CFrame = v1.HumanoidRootPart.CFrame;
+															v5.Humanoid.JumpPower = 0;
+															v5.Humanoid.WalkSpeed = 0;
+															v5.HumanoidRootPart.CanCollide = false;
+															v5.Humanoid:ChangeState(14);
+															v5.Humanoid:ChangeState(16);
+															v5.Humanoid:ChangeState(11);
+															v5.HumanoidRootPart.Size = Vector3.new(55, 55, 55);
+														end
+													end);
+												end
+											end
+										end);
+										if (game.Players.LocalPlayer.Character:FindFirstChild("Black Leg") and (game.Players.LocalPlayer.Character:FindFirstChild("Black Leg").Level.Value >= 150)) then
+											game:service("VirtualInputManager"):SendKeyEvent(true, "V", false,game);
+											game:service("VirtualInputManager"):SendKeyEvent(false, "V",false, game);
+										end
+										game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v1.HumanoidRootPart.CFrame * CFrame.new(0, 30, 1);
+									end
+								until not CustomFindFirstChild(MaterialMob) or not AutoFarmMaterial or (v1.Humanoid.Health <= 0) or not v1.Parent
+								FastAttack = false;
+							end
+						end
+					else
+						FastAttack = false;
+						Modstween = toTarget(CFrameMon);
+						if (World1 and (table.find(MaterialMob, "Fishman Commando")) and ((CFrameMon.Position - game:GetService("Players").LocalPlayer.Character:WaitForChild("HumanoidRootPart").Position).magnitude > 50000)) then
+							if Modstween then Modstween:Stop(); end
+							wait(0.5); game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(
+								"requestEntrance", Vector3.new(61163.8515625, 11.6796875, 1819.7841796875));
+						elseif (World1 and not (table.find(MaterialMob, "Fishman Commando")) and ((CFrameMon.Position - game:GetService("Players").LocalPlayer.Character:WaitForChild("HumanoidRootPart").Position).magnitude > 50000)) then
+							if Modstween then Modstween:Stop(); end
+							wait(0.5); game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(
+								"requestEntrance", Vector3.new(3864.8515625, 6.6796875, -1926.7841796875));
+						elseif (World1 and (table.find(MaterialMob, "God's Guard")) and ((CFrameMon.Position - game:GetService("Players").LocalPlayer.Character:WaitForChild("HumanoidRootPart").Position).magnitude > 3000)) then
+							if Modstween then Modstween:Stop(); end
+							wait(0.5); game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer(
+								"requestEntrance",
+								Vector3.new(-4607.8227539063, 872.54248046875, -1667.5568847656));
+						elseif ((CFrameMon.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude <= 150) then
+							if Modstween then 
+								Modstween:Stop()
+								spawn(function()
+									if posrandom <= 1 then
+										game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrameMon * CFrame.new(0,0,35)
+										posrandom = posrandom + 0.1
+									elseif posrandom >= 1 and posrandom <= 2 then
+										game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrameMon * CFrame.new(35,0,0)
+										posrandom = posrandom + 0.1
+									elseif posrandom >= 2 and posrandom <= 3 then
+										game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrameMon *CFrame.new(0,0,-35)
+										posrandom = posrandom + 0.1
+									elseif posrandom >= 3 and posrandom <= 4  then
+										game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrameMon * CFrame.new(-35,0,0)
+										posrandom = posrandom + 0.1
+								elseif posrandom >=4 and posrandom <= 5 then
+									game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrameMon * CFrame.new(35,0,0)
+									posrandom = 0
+								end
+							end)
+						end
+						   -- game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrameMon;
+						end
+					end
+				end
+			end, function(x)
+			   
+			end)
+		else
+			break;
+		end
+	end
 end)
 ----------------------------------------------------------------------------------------------------------------------Setting Tab
 local SafeModeToggle = Set:AddToggle({
