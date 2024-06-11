@@ -1,4 +1,3 @@
---a
 local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/REDzHUB/RedzLibV5/main/Source.Lua"))()
 
 local Window = redzlib:MakeWindow({
@@ -1411,6 +1410,66 @@ spawn(function()
     end
 end)
 ----------------------------------------------------------------------------------------------------------------------Main Tab
+local ConfigFarm = Main:AddSection({"Config Farm"})
+
+local FastAttackSpeedDropdown = Tab2:AddDropdown({
+	Name = "Fast Attack Speed",
+	Description = "Tốc độ đánh nhanh",
+	Options = {"Slow", "Normal", "Fast", "Ultra"},
+	Default = _G.Settings.FastType,
+	Flag = "...",
+	Callback = function(value)
+		_G.FastType = value
+		_G.Settings.FastType = value
+		SaveSettings()
+	end
+})
+if _G.FastType == "Slow" then
+	_G.Fast_Delay = 1
+elseif _G.FastType == "Normal" then
+	_G.Fast_Delay = 0.175
+elseif _G.FastType == "Fast" then
+	_G.Fast_Delay = 0.05
+elseif _G.FastType == "Extreme" then
+	_G.Fast_Delay = 0.025
+end
+task.spawn(function()
+	pcall(function()
+		while task.wait(_G.Fast_Delay) do
+			if FastAttack or _G.FastAttack then
+				AttackFunc()
+			end
+		end
+	end)
+end)
+local Time = 0.04
+task.spawn(function()
+    while _G.FastAttack do task.wait()
+    require(game.ReplicatedStorage.Util.CameraShaker):Stop()
+    Bruh = require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework)
+    Ryu = debug.getupvalues(Bruh)[2]
+    task.spawn(function()
+        while true do task.wait()
+            if _G.FastAttack then
+                if typeof(Ryu) == "table" then
+                    pcall(function()
+                        --Ryu.activeController.timeToNextAttack = -(math.huge^math.huge^math.huge)
+                        Ryu.activeController.timeToNextAttack = 1
+                        Ryu.activeController.active = false
+                        Ryu.activeController.timeToNextBlock = 0
+                        Ryu.activeController.focusStart = 0
+                        Ryu.activeController.increment = 4
+                        Ryu.activeController.blocking = false
+                        Ryu.activeController.attacking = false
+                        Ryu.activeController.humanoid.AutoRotate = false
+                        end)
+                    end
+                end
+            end
+        end)
+    end
+end)
+
 local MainFarm = Main:AddSection({"Main Farm"})
 
 local AutoFarmLevelToggle = Main:AddToggle({
