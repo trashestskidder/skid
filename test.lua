@@ -1,4 +1,3 @@
---a
 local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/REDzHUB/RedzLibV5/main/Source.Lua"))()
 
 local Window = redzlib:MakeWindow({
@@ -48,7 +47,7 @@ q.Size = UDim2.new(0, 55, 0, 55)
 q.Font = Enum.Font.SourceSans;
 q.Text = ""
 q.TextColor3 = Color3.fromRGB(153, 51, 255)
-q.TextSize = 20.000;
+q.TextSize = 30.000;
 q.Draggable = true;
 q.MouseButton1Click:Connect(function()
 	Window:Minimize()
@@ -1696,9 +1695,7 @@ local BoneFarm = Main:AddSection({"Bone Farm"})
 local TotalBone = Main:AddParagraph({"Total Bone"})
 spawn(function()
 	while wait() do
-		local boneStatus = game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Bones", "Check")
-		TotalBone:Set('Status : ' .. boneStatus)
-		wait(1)
+		TotalBone:Set("Status : " .. game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Bones", "Check"))
 	end
 end)
 
@@ -1899,6 +1896,124 @@ spawn(function()
 end)
 
 local CakeFarm = Main:AddSection({"Cake Farm"})
+
+local NeedKill = Main:AddParagraph({"Need Kill"})
+spawn(function()
+	while wait() do
+		pcall(function()
+			local cakeStatus = game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("CakePrinceSpawner")
+			if string.len(cakeStatus) == 88 then
+				NeedKill:Set("Status : " .. string.sub(cakeStatus, 39, 41))
+			elseif string.len(cakeStatus) == 87 then
+				NeedKill:Set("Status : " .. string.sub(cakeStatus, 39, 40))
+			elseif string.len(cakeStatus) == 86 then
+				NeedKill:Set("Status : " .. string.sub(cakeStatus, 39, 39))
+			else
+				NeedKill:Set("Status : Cake Prince Is Spawning")
+			end
+		end)
+	end
+end)
+
+local AutoFarmCakePrinceToggle = Main:AddToggle({
+	Name = "Auto Farm Cake Prince",
+	Description = "Tự động cày tư lệnh bột",
+	Default = _G.Settings.AutoCakePrince
+})
+AutoFarmCakePrinceToggle:Callback(function(value)
+	_G.AutoCakePrince = value
+	_G.Settings.AutoCakePrince = value
+	SaveSettings()
+	if value == false then
+		toTarget(game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame)
+	end
+end)
+spawn(function()
+	while wait() do
+		if _G.AutoCakePrince then
+			pcall(function()
+				if game.ReplicatedStorage:FindFirstChild("Cake Prince") or game:GetService("Workspace").Enemies:FindFirstChild("Cake Prince") or  game.ReplicatedStorage:FindFirstChild("Dough King") or game:GetService("Workspace").Enemies:FindFirstChild("Dough King") then   
+						if _G.BypassTP then
+						_G.BypassTP = false
+					end
+					if not game:GetService("Workspace").Enemies:FindFirstChild("Cake Prince") then
+						for _,x in pairs(game.ReplicatedStorage:GetChildren()) do 
+							if x.Name == "Cake Prince" or x.Name == "Dough King" then
+								if (x.HumanoidRootPart.CFrame.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 1000 then
+									_G.BypassTP = false
+									wait(1.5)
+									toTarget(CFrame.new(-2145.89722, 70.0088272, -12399.6016, 0.99999702, 1.58276379e-08, 0.00245277886, -1.57982978e-08, 1, -1.19813057e-08, -0.00245277886, 1.19425199e-08, 0.99999702))
+									return
+								end
+							end
+						end
+					end
+					for i,v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+						if v.Name == "Cake Prince" then
+							if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+								repeat task.wait()
+									if (v.HumanoidRootPart.CFrame.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 1000 then
+										toTarget(CFrame.new(-2145.89722, 70.0088272, -12399.6016, 0.99999702, 1.58276379e-08, 0.00245277886, -1.57982978e-08, 1, -1.19813057e-08, -0.00245277886, 1.19425199e-08, 0.99999702))
+										return
+									end
+									EquipWeapon(_G.SelectWeapon)
+									v.HumanoidRootPart.Size = Vector3.new(60, 60, 60)  
+									BringMob = true
+									toTarget(v.HumanoidRootPart.CFrame * MethodFarm)
+									if (v.HumanoidRootPart.CFrame.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 50 then
+										_G.FastAttack = true
+									end
+									sethiddenproperty(game.Players.LocalPlayer,"SimulationRadius",math.huge)
+								until not _G.AutoCakePrince or not v.Parent or v.Humanoid.Health <= 0
+							end
+						else
+							for _,x in pairs(game.ReplicatedStorage:GetChildren()) do 
+								if x.Name == "Cake Prince" or x.Name == "Dough King" then
+									if (x.HumanoidRootPart.CFrame.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 1000 then
+										toTarget(CFrame.new(-2145.89722, 70.0088272, -12399.6016, 0.99999702, 1.58276379e-08, 0.00245277886, -1.57982978e-08, 1, -1.19813057e-08, -0.00245277886, 1.19425199e-08, 0.99999702))
+										return
+									end
+								end
+							end
+						end
+					end
+				else 
+					if game:GetService("Workspace").Enemies:FindFirstChild("Cake Prince") or game.ReplicatedStorage:FindFirstChild("Cake Prince") then
+						for _,x in pairs(game.ReplicatedStorage:GetChildren()) do 
+							if x.Name == "Cake Prince" or x.Name == "Dough King" then
+								if (x.HumanoidRootPart.CFrame.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 1000 then
+									toTarget(CFrame.new(-2145.89722, 70.0088272, -12399.6016, 0.99999702, 1.58276379e-08, 0.00245277886, -1.57982978e-08, 1, -1.19813057e-08, -0.00245277886, 1.19425199e-08, 0.99999702))
+									return
+								end
+							end
+						end
+					else
+						if game.Workspace.Enemies:FindFirstChild("Baking Staff") or game.Workspace.Enemies:FindFirstChild("Head Baker") or game.Workspace.Enemies:FindFirstChild("Cake Guard") or game.Workspace.Enemies:FindFirstChild("Cookie Crafter")  then
+							for i,v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do  
+								if (v.Name == "Baking Staff" or v.Name == "Head Baker" or v.Name == "Cake Guard" or v.Name == "Cookie Crafter") and v.Humanoid.Health > 0 then
+									repeat wait()
+										PosMon = v.HumanoidRootPart.CFrame
+										EquipWeapon(_G.SelectWeapon)
+										v.HumanoidRootPart.Size = Vector3.new(60, 60, 60)  
+										BringMob = true
+										toTarget(v.HumanoidRootPart.CFrame * MethodFarm)
+										if (v.HumanoidRootPart.CFrame.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 50 then
+											_G.FastAttack = true
+										end
+									until _G.AutoCakePrince == false or game:GetService("ReplicatedStorage"):FindFirstChild("Cake Prince") or not v.Parent or v.Humanoid.Health <= 0
+								end
+							end
+						else
+							BringMob = false
+							toTarget(GetCake_CFrame_Mon() * MethodFarm)
+							wait(0.5)
+						end
+					end
+				end
+			end)
+		end
+	end
+end)
 
 local ChestFarm = Main:AddSection({"Chest Farm"})
 
