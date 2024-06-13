@@ -1,3 +1,4 @@
+--a
 local Update = loadstring(Game:HttpGet"https://roblox.relzscript.xyz/source/relzhub/library/pc.lua")()
 local Alert = loadstring(Game:HttpGet"https://roblox.relzscript.xyz/source/relzhub/library/alert.lua")()
 local Library = Update:Window("Blox Fruits")
@@ -1816,360 +1817,104 @@ end
 			end)
 		end
     end)
-
-
-function TelePPlayer(P)
-	game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = P
-end
     
-function GetDistance(position1, position2)
-	return (position1 - position2).Magnitude
-end
-
-function CheckHeight(part)
-	local hrp = Client.Character and Client.Character:FindFirstChild("HumanoidRootPart")
-
-	if part and hrp then
-		local distanceThreshold = 50
-
-		local distance = hrp.Position.Y - part.Position.Y
-		if distance <= distanceThreshold then
-			hrp.CFrame = hrp.CFrame * CFrame.new(0,100,0)
-		end
-	end
-end
-
-function DisableCollisions(object, enable)
-	local parts = object.Character:GetDescendants()
-
-	local batch = {}
-	local batchSize = 0
-
-	for _, v in ipairs(parts) do
-		if v:IsA("BasePart") then
-			table.insert(batch, v)
-			batchSize = batchSize + 1
-
-			if batchSize >= 100 then
-				for _, part in ipairs(batch) do
-					part.CanCollide = enable
-				end
-				batch = {}
-				batchSize = 0
-			end
-		end
-	end
-
-	for _, part in ipairs(batch) do
-		part.CanCollide = enable
-	end
-end
-
-local tween = nil
-function GetIsLand(...)
-	local RealtargetPos = {...}
-	local targetPos = RealtargetPos[1]
-	local RealTarget
-	if type(targetPos) == "vector" then
-		RealTarget = targetPos
-	elseif type(targetPos) == "userdata" then
-		RealTarget = targetPos.Position
-	elseif type(targetPos) == "number" then
-		RealTarget = CFrame.new(unpack(RealtargetPos))
-		RealTarget = RealTarget.p
-	end
-
-	local ReturnValue
-	local CheckInOut = math.huge;
-	if Client.Team then
-		for _,v in pairs(workspace._WorldOrigin.PlayerSpawns:FindFirstChild(tostring(Client.Team)):GetChildren()) do 
-			local ReMagnitude = GetDistance(RealTarget, v:GetModelCFrame().p);
-			if ReMagnitude < CheckInOut then
-				CheckInOut = ReMagnitude;
-				ReturnValue = v.Name
-			end
-		end
-		if ReturnValue then
-			return ReturnValue
-		end 
-	end
-end
-
-function selectSpawnPoint(object)
-	local closestSpawn = nil
-	local closestDistance = math.huge
-
-	for _, model in pairs(workspace["_WorldOrigin"].PlayerSpawns[tostring(Client.Team)]:GetChildren()) do
-		if model:IsA("Model") then
-			for _, spawn in pairs(model:GetChildren()) do
-				if spawn:IsA("Part") then
-					if object and spawn then
-						local distance = GetDistance(spawn.Position, object.Position)
-
-						if distance < closestDistance then
-							closestSpawn = spawn
-							closestDistance = distance
-						end
-					end
-				end
-			end
-		end
-	end
-
-	return closestSpawn
-end
-
-function FindNearestTeleporter(playerPosition)
-	local locations
-
-	if PlaceID == 2753915549 then
-		locations = {
-			["SkyLandsI"] = Vector3.new(-4607.82275390625, 872.5422973632812, -1667.556884765625),
-			["SkyLandsII"] = Vector3.new(-7894.6201171875, 5545.49169921875, -380.2467346191406),
-			["UnderWater"] = Vector3.new(61163.8515625, 11.759522438049316, 1819.7841796875),
-			["Whirlpool"] = Vector3.new(3876.280517578125, 35.10614013671875, -1939.3201904296875)
-		}
-	elseif PlaceID == 4442272183 then
-		locations = {
-			["SwanEntrance"] = Vector3.new(-286.989075, 306.137909, 592.882751)
-		}
-	end
-
-	local nearestLocation
-	local minDistance = math.huge
-	local playerRootPosition = Client.Character.HumanoidRootPart.Position
-
-	for locationName, locationPosition in pairs(locations) do
-		local distance = GetDistance(locationPosition, playerPosition.Position)
-		if distance < minDistance then
-			minDistance = distance
-			nearestLocation = locationName
-		end
-	end
-
-	local playerToNearest = GetDistance(playerRootPosition, playerPosition.Position)
-
-	if minDistance <= playerToNearest then
-		return locations[nearestLocation]
-	end
-end
-
-function requestEntrance(aJ)
-	CancelTween()
-	local args = {"requestEntrance", aJ}
-	Com("F_", unpack(args))
-	local Old = Client.Character.HumanoidRootPart.CFrame
-	Client.Character.HumanoidRootPart.CFrame = CFrame.new(Old.X, Old.Y, Old.Z)
-	task.wait(0.5)
-	return
-end
-
-function BTP(tween, object, distance, distanceValue)
-	if BypassTP then
-		if distance <= distanceValue then
-			if tween then
-				tween:Play()
-			end
-		else
-			local GetIsLand = tostring(GetIsLand(object))
-			CancelTween()
-			fkwarp = false
-			pcall(function()
-				if GetIsLand == "DressTown" or GetIsLand == "Sky2" or GetIsLand == "Undertown" then
-					local pos = FindNearestTeleporter(object)
-					requestEntrance(pos)
-				elseif Client.Data:FindFirstChild("LastSpawnPoint").Value == GetIsLand then
-					Client.Character:WaitForChild("Humanoid").Health = 0
-					task.wait(0.1)
-					repeat wait() until Client.Character:WaitForChild("Humanoid").Health > 0
-				else
-					if PlayerTracker.IsPlayerDead(Client) then 
-						CancelTween()
-						repeat wait() until Client.Character:WaitForChild("Humanoid").Health > 0 
-						task.wait(0.75)
-					end
-
-					if Client.Character:WaitForChild("Humanoid").Health > 0 then
-						local elapsedTime = 0
-
-						local heartbeatConnection
-						local function onUpdate(deltaTime)
-							elapsedTime = elapsedTime + deltaTime
-							Client.Character.HumanoidRootPart.CFrame = selectSpawnPoint(object).CFrame
-							Com("F_", "SetSpawnPoint")
-							if elapsedTime >= 0.075 or fkwarp == true then
-								heartbeatConnection:Disconnect()
-							end
-						end
-
-						heartbeatConnection = RunService.Heartbeat:Connect(onUpdate)
-
-						fkwarp = true
-					end
-					task.wait(0.04)
-					Client.Character:FindFirstChild("Humanoid").Health = 0
-					repeat wait() until Client.Character:WaitForChild("Humanoid").Health > 0
-					task.wait(0.1)
-					Com("F_", "SetSpawnPoint")
-				end
-			end)
-		end
-		task.wait(0.2)
-		return
-	end
-end
-
-function TP1(pos, customDistance)
-    if not IsAlive(Client.Character) then
-		repeat task.wait() until Client.Character:WaitForChild("Humanoid").Health > 0
-		wait(0.75)
-	end
-
-    local val = Instance.new("CFrameValue")
-    val.Value = Client.Character.HumanoidRootPart.CFrame
-	
-	local Distance = GetDistance(pos.Position, Client.Character.HumanoidRootPart.Position)
-
-    local tween = TweenService:Create(
-        val, 
-        TweenInfo.new(Distance / 315, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0), 
-        {Value = pos}
-    )
-
-    tween:Play()
-
-    local completed
-    tween.Completed:Connect(function()
-        completed = true
-    end)
-
-    while not completed do
-        if Distance < 200 or not _G.AutoFarm or Client.Character.Humanoid.Health <= 0 then tween:Cancel() Client.Character.HumanoidRootPart.CFrame = pos break end
-        if customDistance then
-			if Distance <= customDistance then
-				pcall(function()
-					tween:Cancel()
-					Client.Character.HumanoidRootPart.CFrame = pos
-					return
-				end)
-			end
-		else
-			if Distance <= 250 then
-				pcall(function()
-					tween:Cancel()
-					Client.Character.HumanoidRootPart.CFrame = pos
-					return
-				end)
-			end
-		end
-		Client.Character.HumanoidRootPart.CFrame = val.Value
-        task.wait()
+    local Players = game:GetService("Players")
+    local TweenService = game:GetService("TweenService")
+    local LocalPlayer = Players.LocalPlayer
+    local Character = LocalPlayer.Character
+    local HumanoidRootPart = Character:WaitForChild("HumanoidRootPart")
+    
+    function GetDistance(target)
+        return math.floor((target.Position - HumanoidRootPart.Position).Magnitude)
     end
-
-    val:Destroy()
-end
-
-function topos(RealTarget, customDistance, Specical)
-	if not IsAlive(Client.Character) then
-		CancelTween()
-		repeat task.wait() until Client.Character:WaitForChild("Humanoid").Health > 0
-		wait(0.75)
-	end
-
-	local Distance = GetDistance(RealTarget.Position, Client.Character.HumanoidRootPart.Position)
-
-	if customDistance then
-		if Distance <= customDistance then
-			pcall(function()
-				CancelTween()
-				Client.Character.HumanoidRootPart.CFrame = RealTarget
-				return
-			end)
-		end
-	else
-		if Distance <= 250 then
-			pcall(function()
-				CancelTween()
-				Client.Character.HumanoidRootPart.CFrame = RealTarget
-				return
-			end)
-		end
-	end
-
-	if not Specical then
-		local distancetotp = 1000
-		bypassTeleport(tween, RealTarget, Distance, distancetotp)
-	end
-
-	local cameraPart = workspace.Camera.Part
-	if Distance > 1000 then
-		CheckHeight(cameraPart)
-	end
-
-	local info = TweenInfo.new(Distance / 315, Enum.EasingStyle.Linear)
-	local tween = TweenService:Create(Client.Character.HumanoidRootPart, info, {CFrame = RealTarget})
-
-	tween:Play()
-end
-
-
+    
+    function BTP(p)
+        pcall(function()
+            if (p.Position-LocalPlayer.Character.HumanoidRootPart.Position).Magnitude >= 1500 and not Auto_Raid and LocalPlayer.Character.Humanoid.Health > 0 then
+                repeat wait()
+                    LocalPlayer.Character.HumanoidRootPart.CFrame = p
+                    wait(.05)
+                    LocalPlayer.Character.Head:Destroy()
+                    LocalPlayer.Character.HumanoidRootPart.CFrame = p
+                until (p.Position-LocalPlayer.Character.HumanoidRootPart.Position).Magnitude < 1500 and LocalPlayer.Character.Humanoid.Health > 0
+            end
+        end)
+    end
+    
+    function TP(Pos)
+        local distance = (Pos.Position - HumanoidRootPart.Position).Magnitude
+        local TweenSpeed = 1
+        local tweenInfo = TweenInfo.new(distance / TweenSpeed, Enum.EasingStyle.Linear)
+        TweenService:Create(HumanoidRootPart, tweenInfo, {CFrame = Pos}):Play()
+    end
+    
+    function TP1(Pos)
+        local distance = (Pos.Position - HumanoidRootPart.Position).Magnitude
+        local TweenSpeed = 1
+        TweenService:Create(Character.HumanoidRootPart, TweenInfo.new(distance/TweenSpeed, Enum.EasingStyle.Linear), {CFrame = Pos}):Play()
+    end
+    
+    local stoppos = {}
+    
+    function topos(Pos)
+        local distance = (Pos.Position - HumanoidRootPart.Position).Magnitude
+        local tween = TweenService:Create(Character.HumanoidRootPart, TweenInfo.new(distance/1, Enum.EasingStyle.Linear), {CFrame = Pos}):Play()
+    
+        function stoppos:Stop()
+            tween:Cancel()
+        end
+    
+        return stoppos
+    end
+    
     function fastpos(Pos)
-        Distance = (Pos.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
-        Speed = 1000
-        game:GetService("TweenService"):Create(
-            game:GetService("Players").LocalPlayer.Character.HumanoidRootPart,
-            TweenInfo.new(Distance/Speed, Enum.EasingStyle.Linear),
-            {CFrame = Pos}
-        ):Play()
+        local distance = (Pos.Position - HumanoidRootPart.Position).Magnitude
+        local TweenSpeed = 1000
+        TweenService:Create(Character.HumanoidRootPart, TweenInfo.new(distance/TweenSpeed, Enum.EasingStyle.Linear), {CFrame = Pos}):Play()
     end
-
+    
     function slowpos(Pos)
-        Distance = (Pos.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude
-        Speed = 150
-        game:GetService("TweenService"):Create(
-            game:GetService("Players").LocalPlayer.Character.HumanoidRootPart,
-            TweenInfo.new(Distance/Speed, Enum.EasingStyle.Linear),
-            {CFrame = Pos}
-        ):Play()
+        local distance = (Pos.Position - HumanoidRootPart.Position).Magnitude
+        local TweenSpeed = 150
+        TweenService:Create(Character.HumanoidRootPart, TweenInfo.new(distance/TweenSpeed, Enum.EasingStyle.Linear), {CFrame = Pos}):Play()
     end
-
-    -- or (game:GetService("Workspace").Enemies:FindFirstChild("Shark") and _G.AutoKillShark) or (game:GetService("Workspace").Enemies:FindFirstChild("Terrorshark") and _G.AutoTerrorshark) or (game:GetService("Workspace").Enemies:FindFirstChild("Piranha") and _G.AutoKillPiranha) or (game:GetService("Workspace").Enemies:FindFirstChild("Fish Crew Member") and _G.AutoKillFishCrew)
     
     local stopboat = {}
-function TPB(pos, boat)
-	local tween_s = game:service"TweenService"
-	local info = TweenInfo.new((boat.CFrame.Position - pos.Position).Magnitude/BoatSpeed, Enum.EasingStyle.Linear)
-	tween = tween_s:Create(boat, info, {CFrame = pos})
-
-    if (boat.CFrame.Position - pos.Position).Magnitude <= 25 then
-        tween:Cancel()
-    else
-        tween:Play()
+    
+    function TPB(pos, boat)
+        local tween_s = game:service"TweenService"
+        local info = TweenInfo.new((boat.CFrame.Position - pos.Position).Magnitude/BoatSpeed, Enum.EasingStyle.Linear)
+        local tween = tween_s:Create(boat, info, {CFrame = pos})
+    
+        if (boat.CFrame.Position - pos.Position).Magnitude <= 25 then
+            tween:Cancel()
+        else
+            tween:Play()
+        end
+    
+        function stopboat:Stop()
+            tween:Cancel()
+        end
+    
+        return stopboat
     end
-
-
-	function stopboat:Stop()
-		tween:Cancel()
-	end
-
-	return stopboat
-end
-
-function TPP(CFgo)
-	if game.Players.LocalPlayer.Character:WaitForChild("Humanoid").Health <= 0 or not game:GetService("Players").LocalPlayer.Character:WaitForChild("Humanoid") then tween:Cancel() repeat wait() until game:GetService("Players").LocalPlayer.Character:WaitForChild("Humanoid") and game:GetService("Players").LocalPlayer.Character:WaitForChild("Humanoid").Health > 0 wait(7) return end
-	local tween_s = game:service"TweenService"
-	local info = TweenInfo.new((game:GetService("Players")["LocalPlayer"].Character.HumanoidRootPart.Position - CFgo.Position).Magnitude/TweenSpeed, Enum.EasingStyle.Linear)
-	tween = tween_s:Create(game.Players.LocalPlayer.Character["HumanoidRootPart"], info, {CFrame = CFgo})
-	tween:Play()
-
-	local tweenfunc = {}
-
-	function tweenfunc:Stop()
-		tween:Cancel()
-	end
-
-	return tweenfunc
-end
+    
+    function TPP(CFgo)
+        if LocalPlayer.Character:WaitForChild("Humanoid").Health <= 0 or not LocalPlayer.Character:WaitForChild("Humanoid") then tween:Cancel() repeat wait() until LocalPlayer.Character:WaitForChild("Humanoid") and LocalPlayer.Character:WaitForChild("Humanoid").Health > 0 wait(7) return end
+        local tween_s = game:service"TweenService"
+        local info = TweenInfo.new((Players["LocalPlayer"].Character.HumanoidRootPart.Position - CFgo.Position).Magnitude/1, Enum.EasingStyle.Linear)
+        local tween = tween_s:Create(LocalPlayer.Character["HumanoidRootPart"], info, {CFrame = CFgo})
+        tween:Play()
+    
+        local tweenfunc = {}
+    
+        function tweenfunc:Stop()
+            tween:Cancel()
+        end
+    
+        return tweenfunc
+    end
+    
 
 -- getgenv().ToTargets = function(p)
 --     task.spawn(function()
