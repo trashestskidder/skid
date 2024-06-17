@@ -96,7 +96,9 @@ end
 --Save Setting
 _G.Settings = {
 	--Main Tab
-
+    SelectWeapon = "Melee",
+	FastAttackSpeed = "0.1",
+    MethodFarm = "Upper",
 	--Setting Tab
 
 	--Farm Tab
@@ -521,7 +523,7 @@ function InMyNetWork(object)
     if isnetworkowner then
         return isnetworkowner(object)
     else
-        if (object.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= _G.BringDistance then 
+        if (object.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 200 then 
             return true
         end
         return false
@@ -1273,8 +1275,92 @@ local function CustomFindFirstChild(tablename)
 	end
 	return false
 end
-----------------------------------------------------------------------------------------------------------------------Main Tab
+----------------------------------------------------------------------------------------------------------------------Info Tab
+Info:AddDiscordInvite({
+	Name = "Join Luminary Hub Discord",
+	Logo = "rbxassetid://15674916964",
+	Invite = "https://discord.gg/J9zNHMNP7s"
+})
 
+local Skid = Info:AddParagraph({"This script 100% skid 😏😏😏"})
+
+local HopSivi = Info:AddButton({"Hop Sivi", function()
+	Hop()
+end})
+----------------------------------------------------------------------------------------------------------------------Main Tab
+local SelectWeaponDropdown = Main:AddDropdown({
+	Name = "Select Weapon",
+	Description = "Chọn vũ khí",
+	Options = {"Melee", "Sword", "Fruit"},
+	Default = _G.Settings.SelectWeapon,
+	Flag = "...",
+	Callback = function(value)
+		SelectWeapon = value
+		_G.Settings.SelectWeapon = value
+		SaveSettings()
+	end
+})
+task.spawn(function()
+    while wait() do
+        local backpack = game.Players.LocalPlayer.Backpack
+        local toolTipToFind = SelectWeapon
+        if SelectWeapon == "Fruit" then
+            toolTipToFind = "Blox Fruit"
+        end
+        for _, v in pairs(backpack:GetChildren()) do
+            if v.ToolTip == toolTipToFind then
+                if backpack:FindFirstChild(tostring(v.Name)) then
+                    _G.SelectWeapon = v.Name
+                    break
+                end
+            end
+        end
+    end
+end)
+
+local FastAttackSpeedDropdown = Main:AddDropdown({
+	Name = "Fast Attack Speed",
+	Description = "Tốc độ đánh nhanh",
+	Options = {"0", "0.05", "0.1", "0.15", "0.2", "0.25", "0.3", "0.35", "0.4", "0.45", "0.5"},
+	Default = _G.Settings.FastAttackSpeed,
+	Flag = "...",
+	Callback = function(value)
+        _G.FastType = value
+		_G.Settings.FastAttackSpeed = value
+		SaveSettings()
+	end
+})
+_G.FastAttackDelay = tonumber(_G.FastType) or 0
+
+local MethodFarmDropdown = Main:AddDropdown({
+	Name = "Method Farm",
+	Description = "Cách cày",
+	Options = {"Upper", "Behind", "Below"},
+	Default = _G.Settings.MethodFarm,
+	Flag = "...",
+	Callback = function(value)
+		_G.Method = value
+		_G.Settings.MethodFarm = value
+		SaveSettings()
+	end
+})
+task.spawn(function()
+    while task.wait(0) do
+        local method = _G.Method
+        local distance = _G.DistanceAutoFarm
+        local angle = 0
+        if method == "Behind" then
+            MethodFarm = CFrame.new(0, 0, distance)
+        elseif method == "Below" then
+            angle = 90
+            MethodFarm = CFrame.new(0, -distance, 0) * CFrame.Angles(math.rad(angle), 0, 0)
+        elseif method == "Upper" then
+            MethodFarm = CFrame.new(0, distance, 0)
+        else
+            MethodFarm = CFrame.new(0, distance, 0)
+        end
+    end
+end)
 ----------------------------------------------------------------------------------------------------------------------Setting Tab
 
 ----------------------------------------------------------------------------------------------------------------------Farm Tab
