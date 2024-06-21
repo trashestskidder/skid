@@ -1,4 +1,3 @@
---a
 local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/REDzHUB/RedzLibV5/main/Source.Lua"))()
 
 local Window = redzlib:MakeWindow({
@@ -1027,7 +1026,7 @@ end
 function CancelTween()
 	if _G.tween then
 		_G.tween_2:Cancel()
-		_G.tween:Cancel()
+		_G.tween = false
 	end
 end
 
