@@ -1,4 +1,3 @@
---a
 local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/REDzHUB/RedzLibV5/main/Source.Lua"))()
 
 local Window = redzlib:MakeWindow({
@@ -1025,10 +1024,12 @@ function TP(RealTarget, customDistance, Specical)
 end
 
 function CancelTween()
-    if _G.tween then
-		_G.tween_2:Cancel()
-        _G.tween = nil
-    end
+	while true do
+		if _G.tween then
+			_G.tween_2:Cancel()
+			_G.tween = nil
+		end
+	end
 end
 
 --Hop
@@ -1748,7 +1749,7 @@ AutoFarmBoneToggle:Callback(function(value)
 	_G.Settings.AutoFarmBone = value
 	SaveSettings()
 	if not value then
-		_G.tween_2:Cancel()
+		CancelTween()
 	end 
 end)
 spawn(function()
