@@ -1,3 +1,4 @@
+--a
 local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/REDzHUB/RedzLibV5/main/Source.Lua"))()
 
 local Window = redzlib:MakeWindow({
@@ -1720,42 +1721,50 @@ local AutoFarmBoneToggle = Main:AddToggle({
 	Description = "Tự động cày xương",
 	Default = _G.Settings.AutoFarmBone
 })
+
 AutoFarmBoneToggle:Callback(function(value)
-	_G.AutoFarmBone  = value
+	_G.AutoFarmBone = value
 	_G.Settings.AutoFarmBone = value
 	SaveSettings()
 	if not value then
 		CancelTween()
-	end 
+	end
 end)
+
+local function manageMob(v, PosMonBone)
+	v.HumanoidRootPart.CFrame = PosMonBone
+	v.HumanoidRootPart.CanCollide = false
+	v.Humanoid.JumpPower = 0
+	v.Humanoid.WalkSpeed = 0
+	v.HumanoidRootPart.Size = Vector3.new(50, 50, 50)
+	v.HumanoidRootPart.Transparency = 1
+	v.Head.CanCollide = false
+	if v.Humanoid:FindFirstChild("Animator") then
+		v.Humanoid.Animator:Destroy()
+	end
+	sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
+end
+
 spawn(function()
     game:GetService("RunService").Heartbeat:Connect(function()
         if _G.BringMob and _G.AutoFarmBone and StartMagnetBoneMon then
             for i, v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
-                if (v.Name == "Reborn Skeleton" or v.Name == "Living Zombie" or v.Name == "Demonic Soul" or v.Name == "Posessed Mummy") and (v.HumanoidRootPart.Position - PosMonBone.Position).magnitude <= 500 then
-                    v.HumanoidRootPart.CFrame = PosMonBone
-                    v.HumanoidRootPart.CanCollide = false
-                    v.Humanoid.JumpPower = 0
-                    v.Humanoid.WalkSpeed = 0
-                    v.HumanoidRootPart.Size = Vector3.new(50, 50, 50)
-                    v.HumanoidRootPart.Transparency = 1
-                    v.Head.CanCollide = false
-                    if v.Humanoid:FindFirstChild("Animator") then
-                        v.Humanoid.Animator:Destroy()
-                    end
-                    sethiddenproperty(game.Players.LocalPlayer, "SimulationRadius", math.huge)
+                if (v.Name == "Reborn Skeleton" or v.Name == "Living Zombie" or v.Name == "Demonic Soul" or v.Name == "Posessed Mummy") and (v.HumanoidRootPart.Position - PosMonBone.Position).Magnitude <= 500 then
+                    manageMob(v, PosMonBone)
                 end
             end
         end
     end)
 end)
+
 local Number2 = 1
 local BoneTabel = {
-    ["Mon"] = {"Reborn Skeleton","Demonic Soul","Living Zombie","Posessed Mummy"},
+    ["Mon"] = {"Reborn Skeleton", "Demonic Soul", "Living Zombie", "Posessed Mummy"},
     ["Boss"] = {"Soul Reaper"},
     ["Item"] = "Hallow Essence",
 }
 local SetCFarmeBone = 1
+
 function GetBone_CFrame_Mon()
     local matchingCFrames = {}
     for _, Mon in ipairs(BoneTabel["Mon"]) do
@@ -1768,6 +1777,55 @@ function GetBone_CFrame_Mon()
     end
     return matchingCFrames
 end
+
+local function farmBoss(Boss, Item)
+    for _, _v1 in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+        if string.find(_v1.Name, Boss) then
+            if _v1:FindFirstChild("Humanoid") and _v1:FindFirstChild("HumanoidRootPart") and _v1.Humanoid.Health > 0 then
+                repeat
+                    wait()
+                    EquipWeapon(_G.SelectWeapon)
+                    _v1.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
+                    BringMob = true
+                    toTarget(_v1.HumanoidRootPart.CFrame * MethodFarm)
+                    if (_v1.HumanoidRootPart.CFrame.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 50 then
+                        _G.FastAttack = true
+                    end
+                until not _G.AutoFarmBone or _v1.Humanoid.Health <= 0 or not _v1.Parent or _v1.Humanoid.Health <= 0
+                BringMob = false
+            end
+        end
+    end
+end
+
+local function farmMon()
+    for _, _Mon in next, BoneTabel["Mon"] do
+        for i, v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+            if string.find(v.Name, _Mon) then
+                if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
+                    repeat
+                        wait()
+                        PosMon = v.HumanoidRootPart.CFrame
+                        EquipWeapon(_G.SelectWeapon)
+                        v.HumanoidRootPart.Size = Vector3.new(60, 60, 60)
+                        BringMob = true
+                        toTarget(v.HumanoidRootPart.CFrame * MethodFarm)
+                        if (v.HumanoidRootPart.CFrame.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 50 then
+                            _G.FastAttack = true
+                        end
+                    until not _G.AutoFarmBone or v.Humanoid.Health <= 0 or not v.Parent or v.Humanoid.Health <= 0
+                else
+                    local CFrameMon = CFrame.new(-9504.8564453125, 172.14292907714844, 6057.259765625)
+                    repeat
+                        wait()
+                        toTarget(CFrameMon)
+                    until (CFrameMon.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 20 or not _G.AutoFarmBone
+                end
+            end
+        end
+    end
+end
+
 spawn(function()
     while wait() do
         pcall(function()
@@ -1775,77 +1833,13 @@ spawn(function()
                 for _, _Boss in ipairs(BoneTabel["Boss"]) do
                     local _Item = BoneTabel["Item"]
                     if game:GetService("Workspace").Enemies:FindFirstChild(_Boss) or game:GetService("ReplicatedStorage"):FindFirstChild(_Boss) then
-                        for _, _v1 in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
-                            if string.find(_v1.Name, _Boss) then
-                                if _v1:FindFirstChild("Humanoid") and _v1:FindFirstChild("HumanoidRootPart") and _v1.Humanoid.Health > 0 then
-                                    repeat wait()
-                                        EquipWeapon(_G.SelectWeapon)
-                                        _v1.HumanoidRootPart.Size = Vector3.new(60, 60, 60)  
-                                        BringMob = true
-                                        toTarget(_v1.HumanoidRootPart.CFrame * MethodFarm)
-                                        if (_v1.HumanoidRootPart.CFrame.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 50 then
-                                            _G.FastAttack = true
-                                        end
-                                    until not _G.AutoFarmBone or _v1.Humanoid.Health <= 0 or not _v1.Parent or _v1.Humanoid.Health <= 0
-                                    BringMob = false
-                                end
-                            end
-                        end
+                        farmBoss(_Boss, _Item)
                     else
                         if game:GetService("Players").LocalPlayer.Backpack:FindFirstChild(_Item) or game:GetService("Players").LocalPlayer.Character:FindFirstChild(_Item) then
                             EquipWeapon(_Item)
                             toTarget(workspace.Map["Haunted Castle"].Summoner.Detection.CFrame)
                         else
-                            for _, _Mon in next, BoneTabel["Mon"] do
-                                if game:GetService("Workspace").Enemies:FindFirstChild("Reborn Skeleton") or game:GetService("Workspace").Enemies:FindFirstChild("Living Zombie") or game:GetService("Workspace").Enemies:FindFirstChild("Demonic Soul") or game:GetService("Workspace").Enemies:FindFirstChild("Posessed Mummy") then
-                                    for i,v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
-                                        if string.find(v.Name, _Mon) then
-                                            if v:FindFirstChild("Humanoid") and v:FindFirstChild("HumanoidRootPart") and v.Humanoid.Health > 0 then
-                                                repeat wait()
-                                                    PosMon = v.HumanoidRootPart.CFrame
-                                                    EquipWeapon(_G.SelectWeapon)
-                                                    v.HumanoidRootPart.Size = Vector3.new(60, 60, 60)  
-                                                    BringMob = true
-                                                    toTarget(v.HumanoidRootPart.CFrame * MethodFarm)
-                                                    if (v.HumanoidRootPart.CFrame.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 50 then
-                                                        _G.FastAttack = true
-                                                    end
-                                                until not _G.AutoFarmBone or v.Humanoid.Health <= 0 or not v.Parent or v.Humanoid.Health <= 0
-                                            else
-                                                local CFrameMon = CFrame.new(-9504.8564453125, 172.14292907714844, 6057.259765625)
-                                                repeat wait() toTarget(CFrameMon) until (CFrameMon.Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 20 or not _G.AutoFarmBone
-                                            end
-                                        end
-                                    end
-                                else
-                                    if _G.Auto_CFrame then
-                                        toTarget(GetBone_CFrame_Mon()[SetCFarmeBone] * MethodFarm)
-                                        if (GetBone_CFrame_Mon()[SetCFarmeBone].Position - game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.Position).Magnitude <= 50 then
-                                            if SetCFarmeBone == nil or SetCFarmeBone == '' then
-                                                SetCFarmeBone = 1
-                                            elseif SetCFarmeBone >= #GetBone_CFrame_Mon() then
-                                                SetCFarmeBone = 1
-                                            end
-                                            SetCFarmeBone =  SetCFarmeBone + 1
-                                            wait(0.5)
-                                        end
-                                    else
-                                        if AttackRandomType_MonCFrame == 1 then
-                                            toTarget(GetBone_CFrame_Mon()[1] * CFrame.new(0,30,20))
-                                        elseif AttackRandomType_MonCFrame == 2 then
-                                            toTarget(GetBone_CFrame_Mon()[1] * CFrame.new(0,30,-20))
-                                        elseif AttackRandomType_MonCFrame == 3 then
-                                            toTarget(GetBone_CFrame_Mon()[1] * CFrame.new(20,30,0))
-                                        elseif AttackRandomType_MonCFrame == 4 then
-                                            toTarget(GetBone_CFrame_Mon()[1] * CFrame.new(0,30,-20))
-                                        elseif AttackRandomType_MonCFrame == 5 then
-                                            toTarget(GetBone_CFrame_Mon()[1] * CFrame.new(-20,30,0))
-                                        else
-                                            toTarget(GetBone_CFrame_Mon()[1] * CFrame.new(0,30,20))
-                                        end
-                                    end
-                                end
-                            end
+                            farmMon()
                         end
                     end
                 end
