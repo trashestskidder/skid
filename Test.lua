@@ -1064,7 +1064,7 @@ local function AutoQuestFarm()
     end
 end
 task.spawn(function()
-    while true do
+    while wait() do
         if FarmMode == "Normal" and _G.AutoFarm then
             NormalFarm()
         elseif FarmMode == "Nearest" and _G.AutoFarm then
