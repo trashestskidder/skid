@@ -1,3 +1,4 @@
+--a
 local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/REDzHUB/RedzLibV5/main/Source.Lua"))()
 
 local Window = redzlib:MakeWindow({
@@ -89,6 +90,9 @@ end
 --Save Setting
 _G.Settings = {
 	--Main Tab
+    SelectWeapon = "Melee",
+    FastAttackSpeed = "0.1",
+    Method = "Upper",
     AutoFarm = false,
     NeareastFarm = false,
 	--Setting Tab
@@ -545,20 +549,97 @@ task.spawn(function()
 end)
 
 --Fast Attack
-FastGay = loadstring(game:HttpGet("https://raw.githubusercontent.com/bestskidderinroblox/source/main/Fast%20Attack.lua"))()
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
-function AttackFunction()
-    FastGay:Attack()
+local LocalPlayer = Players.LocalPlayer
+local CombatFramework = require(LocalPlayer.PlayerScripts:WaitForChild("CombatFramework"))
+local CombatFrameworkR = debug.getupvalues(CombatFramework)[2]
+
+local function BladeHits(range)
+    local hits = {}
+    for _, enemy in ipairs(Workspace.Enemies:GetChildren()) do
+        local humanoid = enemy:FindFirstChildOfClass("Humanoid")
+        if humanoid and humanoid.Health > 0 then
+            local rootPart = humanoid.RootPart
+            if rootPart and LocalPlayer:DistanceFromCharacter(rootPart.Position) < range then
+                table.insert(hits, rootPart)
+            end
+        end
+    end
+    return hits
 end
 
-spawn(function()
-    while wait() do
-        if FastNoCD then
-            FastGay:InputValue(70, 5)
-            FastGay:Attack(true)
-        else
-            FastGay:Attack(false)
+local function AddAttack(hitTargets)
+    local activeController = CombatFrameworkR.activeController
+    if activeController and activeController.equipped and #hitTargets > 0 then
+        local agrs1 = debug.getupvalue(activeController.attack, 5)
+        local agrs2 = debug.getupvalue(activeController.attack, 6)
+        local agrs3 = debug.getupvalue(activeController.attack, 4)
+        local agrs4 = debug.getupvalue(activeController.attack, 7)
+        local agrs5 = (agrs1 * 798405 + agrs3 * 727595) % agrs2
+        local agrs6 = agrs3 * 798405
+        agrs5 = (agrs5 * agrs2 + agrs6) % 1099511627776
+        agrs1 = math.floor(agrs5 / agrs2)
+        agrs3 = agrs5 - agrs1 * agrs2
+        agrs4 = agrs4 + 1
+        debug.setupvalue(activeController.attack, 5, agrs1)
+        debug.setupvalue(activeController.attack, 6, agrs2)
+        debug.setupvalue(activeController.attack, 4, agrs3)
+        debug.setupvalue(activeController.attack, 7, agrs4)
+
+        local blade = activeController.currentWeaponModel
+        if blade then
+            ReplicatedStorage.RigControllerEvent:FireServer("weaponChange", blade.Name)
+            activeController.animator.anims.basic[1]:Play(0.01, 0.01, 0.01)
+            ReplicatedStorage.Remotes.Validator:FireServer(math.floor(agrs5 / 1099511627776 * 16777215), agrs4)
+            ReplicatedStorage.RigControllerEvent:FireServer("hit", hitTargets, 1, "")
         end
+    end
+end
+
+local function AttackFunc()
+    local delay = math.random(0.1, 0.3)
+    task.wait(delay)
+    AddAttack(BladeHits(65))
+end
+
+local lastTick = tick()
+
+local function RunAttack()
+    if (tick() - lastTick) >= _G.FastAttackDelay then
+        task.spawn(AttackFunc)
+        lastTick = tick()
+    end
+end
+
+local function FastAttackRoutine()
+    while _G.FastAttack do
+        task.wait(0.05)
+        require(ReplicatedStorage.Util.CameraShaker):Stop()
+        local combatFramework = require(LocalPlayer.PlayerScripts.CombatFramework)
+        local controller = debug.getupvalues(combatFramework)[2]
+        if typeof(controller) == "table" then
+            local activeController = controller.activeController
+            activeController.timeToNextAttack = 0
+            activeController.active = false
+            activeController.timeToNextBlock = 0
+            activeController.focusStart = 0
+            activeController.increment = 4
+            activeController.blocking = false
+            activeController.attacking = false
+            activeController.humanoid.AutoRotate = false
+        end
+    end
+end
+
+task.spawn(FastAttackRoutine)
+
+RunService.RenderStepped:Connect(function()
+    if FastAttack or _G.FastAttack then
+        RunAttack()
     end
 end)
 
@@ -780,14 +861,14 @@ function TP1(pos, customDistance)
         if Distance < 200 or not _G.AutoFarm or _G.TptoKisuneIsland or _G.TptoEventIsland or _G.TptoKisuneshrine or _G.ColletEmber or _G.NeareastFarm or _G.Mirage or _G.AutoEvent or _G.Auto_Gear or _G.TeleportGear or _G.AutoNewWorld or _G.TweenToFruitSpawn or _G.AutoSaber or _G.AutoPole or _G.TeleportIsland or _G.AutoThirdSea or _G.AutoBartiloQuest or _G.Auto_Evo_Race_V2 or _G.AutoDarkCoat or _G.AutoSwanGlasses or _G.AutoTrueTriplKatana or _G.AutoRengoku or _G.AutoEctoplasm or _G.AutoFactory or _G.AutoRainbowHaki or _G.AutoEliteHunter or _G.AutoCastleRaid or _G.AutoMusketeerHat or _G.AutoBuddySword or _G.AutoFarmBone or _G.SpawnBossHallow or _G.AutoKenHakiV2 or _G.AutoObservation or _G.AutoGodHuman or _G.AutoCavander or _G.AutoCursedDualKatana or _G.AutoYamaSword or _G.AutoTushitaSword or _G.AutoSerpentBowor or _G.AutoDarkDagger or _G.AutoCakePrince or _G.AutoDoughV2 or _G.AutoHolyTorch or _G.AutoBuddySwords or _G.AutoFarmBossHallow or MobAura or YamaQuest2 or YamaQuest1 or Auto_Cursed_Dual_Katana or Tushita_Quest2 or Tushita_Quest1 or _G.TeleporttoSeaBeast or _G.TPTOBOAT or Tushita_Quest2 or Tushita_Quest1 or AutoFarmMaterial or teleporttop or _G.AutoFarmChest or _G.AutoAllBoss or _G.AutoBossSelect or _G.AutoFarmBoss or _G.AutoFarmFruitMastery or _G.AutoFarmGunMastery or _G.FarmMasterySwordList or _G.AutoRaids or _G.AutoNextPlace or Client.Character.Humanoid.Health <= 0 then
             _G.tween_2:Cancel()
             Client.Character.HumanoidRootPart.CFrame = pos
-            FastNoCD = true
+            FastAttack = true
             break
         end
         if customDistance then
             if Distance <= customDistance then
                 _G.tween_2:Cancel()
                 Client.Character.HumanoidRootPart.CFrame = pos
-                FastNoCD = true
+                FastAttack = true
                 break
             end
         end
@@ -808,14 +889,14 @@ function TP2(RealTarget, customDistance, Specical)
         if Distance <= customDistance then
             StopTween()
             Client.Character.HumanoidRootPart.CFrame = RealTarget
-            FastNoCD = true
+            FastAttack = true
             return
         end
     else
         if Distance <= 200 then
             StopTween()
             Client.Character.HumanoidRootPart.CFrame = RealTarget
-            FastNoCD = true
+            FastAttack = true
             return
         end
     end
@@ -1198,6 +1279,20 @@ task.spawn(function()
     end
 end)
 
+local FastAttackSpeedDropdown = Main:AddDropdown({
+	Name = "Fast Attack Speed",
+	Description = "Tốc độ đánh nhanh",
+	Options = {"0", "0.05", "0.1", "0.15", "0.2", "0.25", "0.3", "0.35", "0.4", "0.45", "0.5"},
+	Default = _G.Settings.FastAttackSpeed,
+	Flag = _G.Settings.FastAttackSpeed,
+	Callback = function(value)
+        _G.FastType = value
+		_G.Settings.FastAttackSpeed = value
+		SaveSettings()
+	end
+})
+_G.FastAttackDelay = tonumber(_G.FastType) or 0.1
+
 local MethodFarmDropdown = Main:AddDropdown({
 	Name = "Method Farm",
 	Description = "Cách cày",
@@ -1280,9 +1375,9 @@ spawn(function()
                             v.Humanoid:ChangeState(16)
                             PosMon = humanoidRootPart.CFrame
                             BringMob = true
-                            FastNoCD = true
+                            FastAttack = true
                             TP1(humanoidRootPart.CFrame * MethodFarm)
-                            if not FastNoCD then
+                            if not FastAttack then
                                 game:GetService("VirtualUser"):CaptureController()
                                 game:GetService("VirtualUser"):Button1Down(Vector2.new(1280, 672))
                             end
@@ -1333,6 +1428,15 @@ BypassTPToggle:Callback(function(value)
 	_G.BypassTP = value
 	_G.Settings.BypassTP = value
 	SaveSettings()
+end)
+
+local FastAttackToggle = Set:AddToggle({
+	Name = "Fast Attack",
+	Description = "Đánh nhanh",
+	Default = true
+})
+FastAttackToggle:Callback(function(value)
+	_G.FastAttack = value
 end)
 
 Set:AddSlider({
