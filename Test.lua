@@ -1,3 +1,4 @@
+--a
 local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/REDzHUB/RedzLibV5/main/Source.Lua"))()
 
 local Window = redzlib:MakeWindow({
@@ -828,21 +829,14 @@ function TP2(RealTarget, customDistance, Specical)
     tween:Play()
 end
 
-function StopTween(target)
-    if not target then
-        _G.tween = false
-        _G.tween_2:Cancel()
-        wait()
-        TP1(game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame)
-        wait()
-        if game:GetService("Players").LocalPlayer.Character.HumanoidRootPart:FindFirstChild("BodyClip") then
-            game:GetService("Players").LocalPlayer.Character.HumanoidRootPart:FindFirstChild("BodyClip"):Destroy()
-        end
-        _G.tween = false
-        _G.tween_2 = false
-    end
-    if game.Players.LocalPlayer.Character:FindFirstChild('Highlight') then
-        game.Players.LocalPlayer.Character:FindFirstChild('Highlight'):Destroy()
+function StopTween(value)
+    if value == false then
+        pcall(function()
+            if _G.tween then
+                _G.tween:Cancel()
+                break
+            end
+        end)
     end
 end
 
@@ -1198,9 +1192,7 @@ AutoFarmNearestMonsterToggle:Callback(function(value)
     _G.NeareastFarm = value
     _G.Settings.NeareastFarm = value
     SaveSettings()
-    if not value then
-        StopTween(_G.NeareastFarm)
-    end
+    StopTween()
 end)
 spawn(function()
     while wait() do
