@@ -1,4 +1,3 @@
---a
 local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/REDzHUB/RedzLibV5/main/Source.Lua"))()
 
 local Window = redzlib:MakeWindow({
@@ -94,6 +93,10 @@ _G.Settings = {
     NeareastFarm = false,
 	--Setting Tab
     SafeMode = false,
+    BypassTP = false,
+    DistanceAutoFarm = 30,
+    BringDistance = 300,
+    TweenSpeed = 300,
 	--Farm Tab
 
 	--Stats Tab
@@ -1163,6 +1166,68 @@ local HopSivi = Info:AddButton({"Hop Sivi", function()
 	Hop()
 end})
 ----------------------------------------------------------------------------------------------------------------------Main Tab
+local ConfigFarm = Main:AddSection({"Config Farm"})
+
+local SelectWeaponDropdown = Main:AddDropdown({
+	Name = "Select Weapon",
+	Description = "Chọn vũ khí",
+	Options = {"Melee", "Sword", "Fruit"},
+	Default = _G.Settings.SelectWeapon,
+	Flag = _G.Settings.SelectWeapon,
+	Callback = function(value)
+		SelectWeapon = value
+		_G.Settings.SelectWeapon = value
+		SaveSettings()
+	end
+})
+task.spawn(function()
+    while wait() do
+        local backpack = game.Players.LocalPlayer.Backpack
+        local toolTipToFind = SelectWeapon
+        if SelectWeapon == "Fruit" then
+            toolTipToFind = "Blox Fruit"
+        end
+        for _, v in pairs(backpack:GetChildren()) do
+            if v.ToolTip == toolTipToFind then
+                if backpack:FindFirstChild(tostring(v.Name)) then
+                    _G.SelectWeapon = v.Name
+                    break
+                end
+            end
+        end
+    end
+end)
+
+local MethodFarmDropdown = Main:AddDropdown({
+	Name = "Method Farm",
+	Description = "Cách cày",
+	Options = {"Upper", "Behind", "Below"},
+	Default = _G.Settings.Method,
+	Flag = _G.Settings.Method,
+	Callback = function(value)
+		_G.Method = value
+		_G.Settings.Method = value
+		SaveSettings()
+	end
+})
+task.spawn(function()
+    while task.wait(0) do
+        local method = _G.Method
+        local distance = _G.DistanceAutoFarm
+        local angle = 0
+        if method == "Behind" then
+            MethodFarm = CFrame.new(0, 0, distance)
+        elseif method == "Below" then
+            angle = 90
+            MethodFarm = CFrame.new(0, -distance, 0) * CFrame.Angles(math.rad(angle), 0, 0)
+        elseif method == "Upper" then
+            MethodFarm = CFrame.new(0, distance, 0)
+        else
+            MethodFarm = CFrame.new(0, distance, 0)
+        end
+    end
+end)
+
 local MainFarm = Main:AddSection({"Main Farm"})
 
 local AutoFarmLevelToggle = Main:AddToggle({
@@ -1258,6 +1323,56 @@ spawn(function()
 		end
 	end
 end)
+
+local BypassTPToggle = Set:AddToggle({
+	Name = "Bypass TP",
+	Description = "Dịch chuyển nhanh",
+	Default = _G.Settings.BypassTP
+})
+BypassTPToggle:Callback(function(value)
+	_G.BypassTP = value
+	_G.Settings.BypassTP = value
+	SaveSettings()
+end)
+
+Set:AddSlider({
+	Name = "Distance Farm",
+	Min = 1,
+	Max = 50,
+	Increase = 1,
+	Default = _G.Settings.DistanceAutoFarm,
+	Callback = function(value)
+		_G.DistanceAutoFarm = value
+		_G.Settings.DistanceAutoFarm = value
+		SaveSettings()
+	end
+})
+
+Set:AddSlider({
+	Name = "Bring Mob Distance",
+	Min = 1,
+	Max = 500,
+	Increase = 1,
+	Default = _G.Settings.BringDistance,
+	Callback = function(value)
+		_G.BringDistance = value
+		_G.Settings.BringDistance = value
+		SaveSettings()
+	end
+})
+
+Set:AddSlider({
+	Name = "Tween Speed",
+	Min = 1,
+	Max = 350,
+	Increase = 1,
+	Default = _G.Settings.TweenSpeed,
+	Callback = function(value)
+		_G.TweenSpeed = value
+		_G.Settings.TweenSpeed = value
+		SaveSettings()
+	end
+})
 ----------------------------------------------------------------------------------------------------------------------Farm Tab
 
 ----------------------------------------------------------------------------------------------------------------------Stats Tab
