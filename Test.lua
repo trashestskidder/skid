@@ -1,3 +1,4 @@
+--a
 local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/REDzHUB/RedzLibV5/main/Source.Lua"))()
 
 local Window = redzlib:MakeWindow({
@@ -829,12 +830,10 @@ function TP2(RealTarget, customDistance, Specical)
 end
 
 function StopTween()
-    pcall(function()
-        if _G.tween then
-            _G.tween:Cancel()
-            break
-        end
-    end)
+    if _G.tween_2 then
+        _G.tween_2:Cancel()
+        _G.tween_2 = nil
+    end
 end
 
 --Hop
@@ -1190,7 +1189,7 @@ AutoFarmNearestMonsterToggle:Callback(function(value)
     _G.Settings.NeareastFarm = value
     SaveSettings()
     if not value then
-        StopTween()
+        StopTween(_G.NeareastFarm)
     end
 end)
 spawn(function()
