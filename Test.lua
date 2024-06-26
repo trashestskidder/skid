@@ -3,7 +3,7 @@ local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/REDzH
 local Window = redzlib:MakeWindow({
 	Title = "Crazzy Hub V3",
 	SubTitle = "by ! xSync",
-	SaveFolder = "Crazzy_Hub"
+	SaveFolder = "Crazzy_Hub_V3"
 })
 
 local Info = Window:MakeTab({"Info", "info"})
@@ -89,9 +89,10 @@ end
 --Save Setting
 _G.Settings = {
 	--Main Tab
-
+    AutoFarm = false,
+    NeareastFarm = false,
 	--Setting Tab
-
+    SafeMode = false,
 	--Farm Tab
 
 	--Stats Tab
@@ -317,12 +318,12 @@ local function QuestCheck()
             end
         end
     end
-    if Lvl >= 375 and Lvl <= 399 then -- Fishman Warrior
+    if Lvl >= 375 and Lvl <= 399 then
         if _G.AutoFarm and (NPCPosition.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 3000 then
             game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance",Vector3.new(61163.8515625, 11.6796875, 1819.7841796875))
         end
     end
-    if Lvl >= 400 and Lvl <= 449 then -- Fishman Commando
+    if Lvl >= 400 and Lvl <= 449 then
         if _G.AutoFarm and (NPCPosition.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).Magnitude > 3000 then
             game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("requestEntrance",Vector3.new(61163.8515625, 11.6796875, 1819.7841796875))
         end
@@ -568,11 +569,9 @@ function Com(com, ...)
 end
 
 --Tween
-local TweenService = game:GetService("TweenService")
-local Client = game.Players.LocalPlayer
-
 function IsAlive(v)
-    return v:FindFirstChild("HumanoidRootPart") and v:FindFirstChild("Humanoid") and v:FindFirstChild("Humanoid").Health > 0
+    return v:FindFirstChild("HumanoidRootPart") and v:FindFirstChild("Humanoid") and
+    v:FindFirstChild("Humanoid").Health > 0
 end
 
 function GetDistance(position1, position2)
@@ -592,21 +591,169 @@ end
 
 function DisableCollisions(object, enable)
     local parts = object.Character:GetDescendants()
+    local batch = {}
+    local batchSize = 0
+
     for _, v in ipairs(parts) do
         if v:IsA("BasePart") then
-            v.CanCollide = enable
+            table.insert(batch, v)
+            batchSize = batchSize + 1
+            if batchSize >= 100 then
+                for _, part in ipairs(batch) do
+                    part.CanCollide = enable
+                end
+                batch = {}
+                batchSize = 0
+            end
+        end
+    end
+    for _, part in ipairs(batch) do
+        part.CanCollide = enable
+    end
+end
+
+function GetIsLand(...)
+    local RealtargetPos = { ... }
+    local targetPos = RealtargetPos[1]
+    local RealTarget
+    if type(targetPos) == "vector" then
+        RealTarget = targetPos
+    elseif type(targetPos) == "userdata" then
+        RealTarget = targetPos.Position
+    elseif type(targetPos) == "number" then
+        RealTarget = CFrame.new(unpack(RealtargetPos))
+        RealTarget = RealTarget.p
+    end
+    local ReturnValue
+    local CheckInOut = math.huge
+    if Client.Team then
+        for _, v in pairs(worldorigin.PlayerSpawns:FindFirstChild(tostring(Client.Team)):GetChildren()) do
+            local ReMagnitude = GetDistance(RealTarget, v:GetModelCFrame().p);
+            if ReMagnitude < CheckInOut then
+                CheckInOut = ReMagnitude
+                ReturnValue = v.Name
+            end
+        end
+        if ReturnValue then
+            return ReturnValue
         end
     end
 end
 
-function StopTween()
-    if _G.tween then
-        _G.tween:Cancel()
-        _G.tween = nil
+function selectSpawnPoint(object)
+    local closestSpawn = nil
+    local closestDistance = math.huge
+    for _, model in pairs(worldorigin.PlayerSpawns[tostring(Client.Team)]:GetChildren()) do
+        if model:IsA("Model") then
+            for _, spawn in pairs(model:GetChildren()) do
+                if spawn:IsA("Part") then
+                    if object and spawn then
+                        local distance = GetDistance(spawn.Position, object.Position)
+
+                        if distance < closestDistance then
+                            closestSpawn = spawn
+                            closestDistance = distance
+                        end
+                    end
+                end
+            end
+        end
     end
-    if _G.tween_2 then
-        _G.tween_2:Cancel()
-        _G.tween_2 = nil
+    return closestSpawn
+end
+
+local PlaceId = game.PlaceId
+function FindNearestTeleporter(playerPosition)
+    local locations
+    if PlaceId == 2753915549 then
+        locations = {
+            ["SkyLandsI"] = Vector3.new(-4607.82275390625, 872.5422973632812, -1667.556884765625),
+            ["SkyLandsII"] = Vector3.new(-7894.6201171875, 5545.49169921875, -380.2467346191406),
+            ["UnderWater"] = Vector3.new(61163.8515625, 11.759522438049316, 1819.7841796875),
+            ["Whirlpool"] = Vector3.new(3876.280517578125, 35.10614013671875, -1939.3201904296875)
+        }
+    elseif PlaceId == 4442272183 then
+        locations = {
+            ["SwanEntrance"] = Vector3.new(-286.989075, 306.137909, 592.882751)
+        }
+    end
+    local nearestLocation
+    local minDistance = math.huge
+    local playerRootPosition = Client.Character.HumanoidRootPart.Position
+    for locationName, locationPosition in pairs(locations) do
+        local distance = GetDistance(locationPosition, playerPosition.Position)
+        if distance < minDistance then
+            minDistance = distance
+            nearestLocation = locationName
+        end
+    end
+    local playerToNearest = GetDistance(playerRootPosition, playerPosition.Position)
+    if minDistance <= playerToNearest then
+        return locations[nearestLocation]
+    end
+end
+
+function requestEntrance(aJ)
+    StopTween()
+    local args = {"requestEntrance", aJ}
+    Com("F_", table.unpack(args))
+    local Old = Client.Character.HumanoidRootPart.CFrame
+    Client.Character.HumanoidRootPart.CFrame = CFrame.new(Old.X, Old.Y, Old.Z)
+    task.wait(0.3)
+    return
+end
+
+function bypassTeleport(object, distance, distanceValue)
+    if _G.BypassTP then
+        if distance <= distanceValue then
+            if _G.tween then
+                _G.tween:Play()
+            end
+        else
+            StopTween()
+            stop = false
+            pcall(function()
+                --print(tostring(GetIsLand(object)))
+                if tostring(GetIsLand(object)) == "DressTown" or tostring(GetIsLand(object)) == "Sky2" or tostring(GetIsLand(object)) == "Undertown" then
+                    local pos = FindNearestTeleporter(object)
+                    --if pos and distance > 1500 then
+                    requestEntrance(pos)
+                    --end
+                elseif Client.Data:FindFirstChild("LastSpawnPoint").Value == tostring(GetIsLand(object)) then
+                    Client.Character:WaitForChild("Humanoid").Health = 0
+                    task.wait(0.1)
+                    repeat task.wait() until Client.Character:WaitForChild("Humanoid").Health > 0
+                else
+                    if not IsAlive(Client.Character) then
+                        StopTween()
+                        repeat task.wait() until Client.Character:WaitForChild("Humanoid").Health > 0
+                        task.wait(0.75)
+                    end
+                    if Client.Character:WaitForChild("Humanoid").Health > 0 then
+                        local elapsedTime = 0
+
+                        local heartbeatConnection
+                        local function onUpdate(deltaTime)
+                            elapsedTime = elapsedTime + deltaTime
+                            Client.Character.HumanoidRootPart.CFrame = selectSpawnPoint(object).CFrame
+                            Com("F_", "SetSpawnPoint")
+                            if elapsedTime >= 0.075 or stop then
+                                heartbeatConnection:Disconnect()
+                            end
+                        end
+                        heartbeatConnection = game.RunService.Heartbeat:Connect(onUpdate)
+                        stop = true
+                    end
+                    task.wait(0.04)
+                    Client.Character:FindFirstChild("Humanoid").Health = 0
+                    repeat task.wait() until Client.Character:WaitForChild("Humanoid").Health > 0
+                    task.wait(0.1)
+                    Com("F_", "SetSpawnPoint")
+                end
+            end)
+        end
+        task.wait(0.2)
+        return
     end
 end
 
@@ -615,32 +762,30 @@ function TP1(pos, customDistance)
         repeat task.wait() until Client.Character:WaitForChild("Humanoid").Health > 0
         task.wait(0.75)
     end
-
-    local Distance = GetDistance(pos.Position, Client.Character.HumanoidRootPart.Position)
     local val = Instance.new("CFrameValue")
     val.Value = Client.Character.HumanoidRootPart.CFrame
+    local Distance = GetDistance(pos.Position, Client.Character.HumanoidRootPart.Position)
     local tween = TweenService:Create(val, TweenInfo.new(Distance / _G.TweenSpeed, Enum.EasingStyle.Linear, Enum.EasingDirection.Out, 0, false, 0), {Value = pos})
-    
     _G.tween_2 = tween
-    tween:Play()
-    
+    _G.tween_2:Play()
     local completed
-    tween.Completed:Connect(function()
+    _G.tween_2.Completed:Connect(function()
         completed = true
     end)
-    
     while not completed do
-        if Distance < 200 or not _G.AutoFarm or Client.Character.Humanoid.Health <= 0 then
-            StopTween()
+        if Distance < 200 or not _G.AutoFarm or _G.TptoKisuneIsland or _G.TptoEventIsland or _G.TptoKisuneshrine or _G.ColletEmber or _G.NeareastFarm or _G.Mirage or _G.AutoEvent or _G.Auto_Gear or _G.TeleportGear or _G.AutoNewWorld or _G.TweenToFruitSpawn or _G.AutoSaber or _G.AutoPole or _G.TeleportIsland or _G.AutoThirdSea or _G.AutoBartiloQuest or _G.Auto_Evo_Race_V2 or _G.AutoDarkCoat or _G.AutoSwanGlasses or _G.AutoTrueTriplKatana or _G.AutoRengoku or _G.AutoEctoplasm or _G.AutoFactory or _G.AutoRainbowHaki or _G.AutoEliteHunter or _G.AutoCastleRaid or _G.AutoMusketeerHat or _G.AutoBuddySword or _G.AutoFarmBone or _G.SpawnBossHallow or _G.AutoKenHakiV2 or _G.AutoObservation or _G.AutoGodHuman or _G.AutoCavander or _G.AutoCursedDualKatana or _G.AutoYamaSword or _G.AutoTushitaSword or _G.AutoSerpentBowor or _G.AutoDarkDagger or _G.AutoCakePrince or _G.AutoDoughV2 or _G.AutoHolyTorch or _G.AutoBuddySwords or _G.AutoFarmBossHallow or MobAura or YamaQuest2 or YamaQuest1 or Auto_Cursed_Dual_Katana or Tushita_Quest2 or Tushita_Quest1 or _G.TeleporttoSeaBeast or _G.TPTOBOAT or Tushita_Quest2 or Tushita_Quest1 or AutoFarmMaterial or teleporttop or _G.AutoFarmChest or _G.AutoAllBoss or _G.AutoBossSelect or _G.AutoFarmBoss or _G.AutoFarmFruitMastery or _G.AutoFarmGunMastery or _G.FarmMasterySwordList or _G.AutoRaids or _G.AutoNextPlace or Client.Character.Humanoid.Health <= 0 then
+            _G.tween_2:Cancel()
             Client.Character.HumanoidRootPart.CFrame = pos
             FastNoCD = true
             break
         end
-        if customDistance and Distance <= customDistance then
-            StopTween()
-            Client.Character.HumanoidRootPart.CFrame = pos
-            FastNoCD = true
-            break
+        if customDistance then
+            if Distance <= customDistance then
+                _G.tween_2:Cancel()
+                Client.Character.HumanoidRootPart.CFrame = pos
+                FastNoCD = true
+                break
+            end
         end
         Client.Character.HumanoidRootPart.CFrame = val.Value
         task.wait()
@@ -655,16 +800,20 @@ function TP2(RealTarget, customDistance, Specical)
         repeat task.wait() until Client.Character:WaitForChild("Humanoid").Health > 0
         task.wait(0.75)
     end
-    if customDistance and Distance <= customDistance then
-        StopTween()
-        Client.Character.HumanoidRootPart.CFrame = RealTarget
-        FastNoCD = true
-        return
-    elseif Distance <= 200 then
-        StopTween()
-        Client.Character.HumanoidRootPart.CFrame = RealTarget
-        FastNoCD = true
-        return
+    if customDistance then
+        if Distance <= customDistance then
+            StopTween()
+            Client.Character.HumanoidRootPart.CFrame = RealTarget
+            FastNoCD = true
+            return
+        end
+    else
+        if Distance <= 200 then
+            StopTween()
+            Client.Character.HumanoidRootPart.CFrame = RealTarget
+            FastNoCD = true
+            return
+        end
     end
     if not Specical then
         bypassTeleport(RealTarget, Distance, 1000)
@@ -675,9 +824,26 @@ function TP2(RealTarget, customDistance, Specical)
     end
     local info = TweenInfo.new(Distance / _G.TweenSpeed, Enum.EasingStyle.Linear)
     local tween = TweenService:Create(Client.Character.HumanoidRootPart, info, {CFrame = RealTarget})
-    
     _G.tween = tween
     tween:Play()
+end
+
+function StopTween(target)
+    if not target then
+        _G.tween = false
+        _G.tween_2:Cancel()
+        wait()
+        TP1(game:GetService("Players").LocalPlayer.Character.HumanoidRootPart.CFrame)
+        wait()
+        if game:GetService("Players").LocalPlayer.Character.HumanoidRootPart:FindFirstChild("BodyClip") then
+            game:GetService("Players").LocalPlayer.Character.HumanoidRootPart:FindFirstChild("BodyClip"):Destroy()
+        end
+        _G.tween = false
+        _G.tween_2 = false
+    end
+    if game.Players.LocalPlayer.Character:FindFirstChild('Highlight') then
+        game.Players.LocalPlayer.Character:FindFirstChild('Highlight'):Destroy()
+    end
 end
 
 --Hop
@@ -895,75 +1061,75 @@ end
 local worldMaterials = {
     World1 = {
         ["Magma Ore"] = {
-            MaterialMob = { "Military Soldier", "Military Spy" },
+            MaterialMob = {"Military Soldier", "Military Spy"},
             CFrameMon = CFrame.new(-5815, 84, 8820)
         },
         ["Leather"] = {
-            MaterialMob = { "Brute" },
+            MaterialMob = {"Brute"},
             CFrameMon = CFrame.new(-1145, 15, 4350)
         },
         ["Scrap Metal"] = {
-            MaterialMob = { "Brute" },
+            MaterialMob = {"Brute"},
             CFrameMon = CFrame.new(-1145, 15, 4350)
         },
         ["Angel Wings"] = {
-            MaterialMob = { "God's Guard" },
+            MaterialMob = {"God's Guard"},
             CFrameMon = CFrame.new(-4698, 845, -1912)
         },
         ["Fish Tail"] = {
-            MaterialMob = { "Fishman Warrior", "Fishman Commando" },
+            MaterialMob = {"Fishman Warrior", "Fishman Commando"},
             CFrameMon = CFrame.new(61123, 19, 1569)
         }
     },
     World2 = {
         ["Magma Ore"] = {
-            MaterialMob = { "Magma Ninja" },
+            MaterialMob = {"Magma Ninja"},
             CFrameMon = CFrame.new(-5428, 78, -5959)
         },
         ["Scrap Metal"] = {
-            MaterialMob = { "Swan Pirate" },
+            MaterialMob = {"Swan Pirate"},
             CFrameMon = CFrame.new(878, 122, 1235)
         },
         ["Radioactive Material"] = {
-            MaterialMob = { "Factory Staff" },
+            MaterialMob = {"Factory Staff"},
             CFrameMon = CFrame.new(295, 73, -56)
         },
         ["Vampire Fang"] = {
-            MaterialMob = { "Vampire" },
+            MaterialMob = {"Vampire"},
             CFrameMon = CFrame.new(-6033, 7, -1317)
         },
         ["Mystic Droplet"] = {
-            MaterialMob = { "Water Fighter", "Sea Soldier" },
+            MaterialMob = {"Water Fighter", "Sea Soldier"},
             CFrameMon = CFrame.new(-3385, 239, -10542)
         }
     },
     World3 = {
         ["Mini Tusk"] = {
-            MaterialMob = { "Mythological Pirate" },
+            MaterialMob = {"Mythological Pirate"},
             CFrameMon = CFrame.new(-13545, 470, -6917)
         },
         ["Fish Tail"] = {
-            MaterialMob = { "Fishman Raider", "Fishman Captain" },
+            MaterialMob = {"Fishman Raider", "Fishman Captain"},
             CFrameMon = CFrame.new(-10993, 332, -8940)
         },
         ["Scrap Metal"] = {
-            MaterialMob = { "Jungle Pirate" },
+            MaterialMob = {"Jungle Pirate"},
             CFrameMon = CFrame.new(-12107, 332, -10549)
         },
         ["Dragon Scale"] = {
-            MaterialMob = { "Dragon Crew Archer", "Dragon Crew Warrior" },
+            MaterialMob = {"Dragon Crew Archer", "Dragon Crew Warrior"},
             CFrameMon = CFrame.new(6594, 383, 139)
         },
         ["Conjured Cocoa"] = {
-            MaterialMob = { "Cocoa Warrior", "Chocolate Bar Battler", "Sweet Thief", "Candy Rebel" },
+            MaterialMob = {"Cocoa Warrior", "Chocolate Bar Battler", "Sweet Thief", "Candy Rebel"},
             CFrameMon = CFrame.new(620.6344604492188, 78.93644714355469, -12581.369140625)
         },
         ["Demonic Wisp"] = {
-            MaterialMob = { "Demonic Soul" },
+            MaterialMob = {"Demonic Soul"},
             CFrameMon = CFrame.new(-9507, 172, 6158)
         },
         ["Gunpowder"] = {
-            MaterialMob = { "Pistol Billionaire" },
+            MaterialMob = {"Pistol Billionaire"},
             CFrameMon = CFrame.new(-469, 74, 5904)
         }
     }
@@ -994,10 +1160,114 @@ local function CustomFindFirstChild(tablename)
 	end
 	return false
 end
+----------------------------------------------------------------------------------------------------------------------Info Tab
+Info:AddDiscordInvite({
+	Name = "Crazzy Hub V3",
+	Logo = "rbxassetid://15660296675",
+	Invite = "https://discord.gg/4ENnwm9wEQ"
+})
+
+local Skid = Info:AddParagraph({"This script 100% skid 😏😏😏"})
+
+local HopSivi = Info:AddButton({"Hop Sivi", function()
+	Hop()
+end})
 ----------------------------------------------------------------------------------------------------------------------Main Tab
+local MainFarm = Main:AddSection({"Main Farm"})
+
+local AutoFarmLevelToggle = Main:AddToggle({
+	Name = "Auto Farm Level",
+	Description = "Tự động cày cấp",
+	Default = _G.Settings.AutoFarm
+})
+AutoFarmLevelToggle:Callback(function(value)
+    _G.AutoFarm = value
+    _G.Settings.AutoFarm = value
+    SaveSettings()
+    if not value then
+        StopTween(_G.AutoFarm)
+    end
+end)
+
+local AutoFarmNearestMonsterToggle = Main:AddToggle({
+	Name = "Auto Farm Nearest Monster",
+	Description = "Tự động cày quái gần nhất",
+	Default = _G.Settings.NeareastFarm
+})
+AutoFarmNearestMonsterToggle:Callback(function(value)
+    _G.NeareastFarm = value
+    _G.Settings.NeareastFarm = value
+    SaveSettings()
+    if not value then
+        StopTween(_G.NeareastFarm)
+    end
+end)
+spawn(function()
+    while wait() do
+        if _G.NeareastFarm then
+            for i, v in pairs(game:GetService("Workspace").Enemies:GetChildren()) do
+                if v.Name and v:FindFirstChild("Humanoid") and v.Humanoid.Health > 0 then
+                    local distance = (v.HumanoidRootPart.Position - game.Players.LocalPlayer.Character.HumanoidRootPart.Position).magnitude
+                    if distance <= 1500 then
+                        repeat
+                            game:GetService("RunService").Heartbeat:wait()
+                            EquipWeapon(_G.SelectWeapon)
+                            if not game.Players.LocalPlayer.Character:FindFirstChild("HasBuso") then
+                                game:GetService("ReplicatedStorage").Remotes.CommF_:InvokeServer("Buso")
+                            end
+                            local humanoidRootPart = v.HumanoidRootPart
+                            humanoidRootPart.CanCollide = false
+                            humanoidRootPart.Size = Vector3.new(80, 80, 80)
+                            v.Humanoid.WalkSpeed = 0
+                            v.Head.CanCollide = false
+                            v.Humanoid:ChangeState(11)
+                            v.Humanoid:ChangeState(14)
+                            v.Humanoid:ChangeState(16)
+                            PosMon = humanoidRootPart.CFrame
+                            BringMob = true
+                            FastNoCD = true
+                            TP1(humanoidRootPart.CFrame * MethodFarm)
+                            if not FastNoCD then
+                                game:GetService("VirtualUser"):CaptureController()
+                                game:GetService("VirtualUser"):Button1Down(Vector2.new(1280, 672))
+                            end
+                            PosMon = humanoidRootPart.CFrame
+                        until not _G.NeareastFarm or not v.Parent or v.Humanoid.Health == 0 or not game.Workspace.Enemies:FindFirstChild(v.Name)
+                    end
+                end
+            end
+        end
+    end
+end)
 
 ----------------------------------------------------------------------------------------------------------------------Setting Tab
-
+local SafeModeToggle = Set:AddToggle({
+	Name = "Safe Mode",
+	Description = "Chế độ an toàn",
+	Default = _G.Settings.SafeMode
+})
+SafeModeToggle:Callback(function(value)
+	_G.SafeMode = value
+	_G.Settings.SafeMode = value
+	SaveSettings()
+end)
+spawn(function()
+	while _G.SafeMode do
+		task.wait()
+		if game.Players.LocalPlayer.Character and game.Players.LocalPlayer.Character:FindFirstChild("Humanoid") then
+			local HealthPercent = (game.Players.LocalPlayer.Character.Humanoid.Health / game.Players.LocalPlayer.Character.Humanoid.MaxHealth) * 100
+			if HealthPercent < 20 then
+				game.Players.LocalPlayer.Character:MoveTo(Vector3.new(0, 100, 0))
+				game:GetService("StarterGui"):SetCore("SendNotification", {
+					Title = "Crazzy Hub V3",
+					Text = "Safe Mode Running",
+					Icon = "rbxassetid://15689000757",
+					Duration = 1
+				})
+			end
+		end
+	end
+end)
 ----------------------------------------------------------------------------------------------------------------------Farm Tab
 
 ----------------------------------------------------------------------------------------------------------------------Stats Tab
