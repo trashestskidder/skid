@@ -1,3 +1,4 @@
+--a
 local redzlib = loadstring(game:HttpGet("https://raw.githubusercontent.com/REDzHUB/RedzLibV5/main/Source.Lua"))()
 
 local Window = redzlib:MakeWindow({
@@ -645,51 +646,13 @@ end)
 local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local _getupvalue = (debug.getupvalue or getupvalue or getupvalues or function(...)return ... end)
-local _setupvalue = (debug.setupvalue or setupvalue or setupvalues or function(...)return ... end)
+
 local CombatFramework = require(Players.LocalPlayer.PlayerScripts:WaitForChild("CombatFramework"))
 local CombatFrameworkR = getupvalues(CombatFramework)[2]
-local CamShake = require(game.ReplicatedStorage.Util.CameraShaker)
-CamShake:Stop()
 
-task.delay(15,function() 
-    if hookfunction and not islclosure(hookfunction) then 
-        workspace._WorldOrigin.ChildAdded:Connect(function(v)
-            if v.Name =='DamageCounter' then 
-                v.Enabled  = false 
-            end
-        end)
-        hookfunction(require(game:GetService("ReplicatedStorage").Effect.Container.Death), function()end)
-        hookfunction(require(game:GetService("ReplicatedStorage").Effect.Container.Respawn), function()end)
-        hookfunction(require(game:GetService("ReplicatedStorage"):WaitForChild("GuideModule")).ChangeDisplayedNPC,function() end)
-        hookfunction(require(game:GetService("ReplicatedStorage"):WaitForChild("GuideModule")).ChangeDisplayedNPC,function() end)
-        task.spawn(function()
-            local NGU,NGUVL
-            repeat 
-                NGU,NGUVL = pcall(function()
-                    for i,v in pairs(getupvalues(require(game:GetService("Players").LocalPlayer.PlayerScripts.CombatFramework))[2].activeController.data) do  
-                        if typeof(v) == 'function' then 
-                            hookfunction(v,function() end )
-                        end
-                    end
-                
-                end)
-                task.wait(1.5)
-            until NGU 
-        end)
-    end
-end)
+local _getupvalue = (debug.getupvalue or getupvalue or getupvalues or function(...)return ... end)
+local _setupvalue = (debug.setupvalue or setupvalue or setupvalues or function(...)return ... end)
 
-task.delay(5,function()
-    for i,v2 in pairs(game.ReplicatedStorage.Effect.Container:GetDescendants()) do 
-        pcall(function()
-            if v2.ClassName =='ModuleScript' and typeof(require(v2)) == 'function' then 
-                hookfunction(require(v2),function()end)
-            end
-        end)
-        wait(.5)
-    end
-end)
 BladeHits = function(Value)
     local Hits = {}
     for _, Hit in ipairs(Workspace.Enemies:GetChildren()) do
@@ -718,48 +681,52 @@ PlayerHits = function(Value)
     return Hits
 end
 AddAttack = function(Hit)
-    local AC = CombatFrameworkR.activeController
-    if not (AC and AC.blades and #Hit > 0) then return end
-    local agrs1 = _getupvalue(AC.attack, 5)
-    local agrs2 = _getupvalue(AC.attack, 6)
-    local agrs3 = _getupvalue(AC.attack, 4)
-    local agrs4 = _getupvalue(AC.attack, 7)
-    local agrs5 = (agrs1 * 798405 + agrs3 * 727595) % agrs2
-    local agrs6 = agrs3 * 798405
+    local ac = CombatFrameworkR.activeController
+    if ac and ac.equipped then
+        if #Hit > 0 then
+            local agrs1 = _getupvalue(ac.attack, 5)
+            local agrs2 = _getupvalue(ac.attack, 6)
+            local agrs3 = _getupvalue(ac.attack, 4)
+            local agrs4 = _getupvalue(ac.attack, 7)
+            local agrs5 = (agrs1 * 798405 + agrs3 * 727595) % agrs2
+            local agrs6 = agrs3 * 798405
 
-    agrs5 = (agrs5 * agrs2 + agrs6) % 1099511627776
-    agrs1 = math.floor(agrs5 / agrs2)
-    agrs3 = agrs5 - agrs1 * agrs2
-    agrs4 = agrs4 + 1
+            agrs5 = (agrs5 * agrs2 + agrs6) % 1099511627776
+            agrs1 = math.floor(agrs5 / agrs2)
+            agrs3 = agrs5 - agrs1 * agrs2
+            agrs4 = agrs4 + 1
 
-    _setupvalue(AC.attack, 5, agrs1)
-    _setupvalue(AC.attack, 6, agrs2)
-    _setupvalue(AC.attack, 4, agrs3)
-    _setupvalue(AC.attack, 7, agrs4)
-    local Blade = AC.currentWeaponModel
-    AC.animator.anims.basic[1]:Play(0.01, 0.01, 0.01)
-    if Blade then
-        pcall(function()
-            ReplicatedStorage.RigControllerEvent:FireServer("weaponChange", Blade.Name)
-            ReplicatedStorage.Remotes.Validator:FireServer(math.floor(agrs5 / 1099511627776 * 16777215), agrs4)
-            ReplicatedStorage.RigControllerEvent:FireServer("hit", Hit, 1, "")
-        end)
+            _getupvalue(ac.attack, 5, agrs1)
+            _getupvalue(ac.attack, 6, agrs2)
+            _getupvalue(ac.attack, 4, agrs3)
+            _getupvalue(ac.attack, 7, agrs4)
+            local Blade = ac.currentWeaponModel
+            ac.animator.anims.basic[1]:Play(0.01, 0.01, 0.01)
+            if Blade then
+                pcall(function()
+                    ReplicatedStorage.RigControllerEvent:FireServer("weaponChange", Blade.Name)
+                    ReplicatedStorage.Remotes.Validator:FireServer(math.floor(agrs5 / 1099511627776 * 16777215), agrs4)
+                    ReplicatedStorage.RigControllerEvent:FireServer("hit", Hit, 1, "")
+                end)
+            end
+        end
     end
 end
+
 AttackFunc = function()
     AddAttack(BladeHits(65))
     AddAttack(PlayerHits(65))
 end
+
 local Tick = tick()
-_G.FastAttackDelay = _G.FastAttackDelay or 0.1
 RunAttack = function()
     if (tick() - Tick) >= math.clamp(_G.FastAttackDelay, 0.100, 1) then
         task.spawn(AttackFunc)
         Tick = tick()
     end
 end
-local RunService= game:GetService("RunService")
-task.spawn(function()
+
+spawn(function()
     while wait() do
         if FastAttack then
             RunAttack()
